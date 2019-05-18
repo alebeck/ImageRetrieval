@@ -7,7 +7,8 @@ from models.custom_module import CustomModule
 
 @dataclass
 class TrainingConfig:
-    dataset: Dataset
+    dataset: Type[Dataset]
+    dataset_args: dict
     model: Type[CustomModule]
     model_args: dict
     batch_size: int
