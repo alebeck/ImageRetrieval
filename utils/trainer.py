@@ -1,3 +1,6 @@
+import os
+import pickle
+
 from utils.config import TrainingConfig
 from utils.data import DataSplitter
 
@@ -7,34 +10,43 @@ class Trainer:
     def __init__(self, config: TrainingConfig):
         self.config = config
         self.data = DataSplitter(
-            dataset=self.config.dataset,
+            dataset=config.dataset(**config.dataset_args),
             batch_size=config.batch_size,
             val_size=config.val_size
         )
         self.model = config.model(**config.model_args)
 
-        # TODO Setup logging
+        if not os.path.exists(config.log_path):
+            os.makedirs(config.log_path)
+
+        # log config
+        with open(os.path.join(config.log_path, 'config.pickle')) as f:
+            pickle.dump(config, f)
 
     def train(self):
         for epoch in range(self.config.epochs):
             # set model to train mode
-            self.model.train()
+            self.model.train() # TODO add to CustomModule abstract methods and implement for SimpleModel
 
             # get training data loader
             train_loader = self.data.train_loader
 
             # train model for one epoch
-            info = self.model.train_epoch(train_loader, self.config.batch_size, self.config.optim, self.config.optim_args)
+            info = self.model.train_epoch(train_loader)
 
-            # TODO Log results
+            # log results
+            with open(os.path.join(self.config.log_path, 'log.txt'), 'a+') as f:
+                f.write(f'[Epoch {epoch}] Train day loss: {info["loss_day"]} Train night loss: {info["loss_night"]}')
 
             # set model to validation mode
-            self.model.eval()
+            self.model.eval() # TODO add to CustomModule abstract methods and implement for SimpleModel
 
             # get validation data loader
             val_loader = self.data.val_loader
 
             # validate model
-            info = self.model.validate(val_loader, self.config.batch_size)
+            info = self.model.validate(val_loader)
 
-            # TODO Log results
+            # log results
+            with open(os.path.join(self.config.log_path, 'log.txt'), 'a+') as f:
+                f.write(f'[Epoch {epoch}] Val day loss: {info["loss_day"]} Val night loss: {info["loss_night"]}')

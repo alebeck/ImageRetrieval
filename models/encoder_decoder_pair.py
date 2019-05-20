@@ -16,3 +16,4 @@ class EncoderDecoderPair(nn.Module):
     def forward(self, input):
         latent = self.encoder(input)
         out = self.decoder(latent)
+        return out

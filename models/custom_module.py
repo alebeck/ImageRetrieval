@@ -7,9 +7,9 @@ class CustomModule:
     """
 
     @abstractmethod
-    def train_epoch(self, train_loader, batch_size, **kwargs):
+    def train_epoch(self, train_loader, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
-    def validate(self, val_loader, batch_size, **kwargs):
+    def validate(self, val_loader, **kwargs):
         raise NotImplementedError

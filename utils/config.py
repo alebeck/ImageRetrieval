@@ -14,3 +14,4 @@ class TrainingConfig:
     batch_size: int
     epochs: int
     val_size: float
+    log_path: str
