@@ -20,7 +20,7 @@ class Trainer:
             os.makedirs(config.log_path)
 
         # log config
-        with open(os.path.join(config.log_path, 'config.pickle')) as f:
+        with open(os.path.join(config.log_path, 'config.pickle'), 'wb+') as f:
             pickle.dump(config, f)
 
     def train(self):
