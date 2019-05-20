@@ -26,7 +26,7 @@ class Trainer:
     def train(self):
         for epoch in range(self.config.epochs):
             # set model to train mode
-            self.model.train() # TODO add to CustomModule abstract methods and implement for SimpleModel
+            self.model.train()
 
             # get training data loader
             train_loader = self.data.train_loader
@@ -39,7 +39,7 @@ class Trainer:
                 f.write(f'[Epoch {epoch}] Train day loss: {info["loss_day"]} Train night loss: {info["loss_night"]}')
 
             # set model to validation mode
-            self.model.eval() # TODO add to CustomModule abstract methods and implement for SimpleModel
+            self.model.eval()
 
             # get validation data loader
             val_loader = self.data.val_loader

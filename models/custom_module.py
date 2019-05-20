@@ -13,3 +13,11 @@ class CustomModule:
     @abstractmethod
     def validate(self, val_loader, **kwargs):
         raise NotImplementedError
+
+    @abstractmethod
+    def train(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def eval(self):
+        raise NotImplementedError

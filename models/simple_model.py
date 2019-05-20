@@ -13,7 +13,7 @@ class SimpleModel(CustomModule):
     enc_dec_night: EncoderDecoderPair
 
     def __init__(self):
-        self.encoder = Encoder() # TODO pretrained (later in project)
+        self.encoder = Encoder()  # TODO pre-trained (later in project)
         self.enc_dec_day = EncoderDecoderPair(self.encoder, Decoder())
         self.enc_dec_night = EncoderDecoderPair(self.encoder, Decoder())
         self.loss_fn = nn.L1Loss()  # TODO Which loss?
@@ -73,3 +73,13 @@ class SimpleModel(CustomModule):
         loss_night_mean = loss_night_sum / len(val_loader)
 
         return {'loss_day': loss_day_mean, 'loss_night': loss_night_mean}
+
+    def train(self):
+        self.encoder.train()
+        self.enc_dec_day.decoder.train()
+        self.enc_dec_night.decoder.train()
+
+    def eval(self):
+        self.encoder.eval()
+        self.enc_dec_day.decoder.eval()
+        self.enc_dec_night.decoder.eval()
