@@ -1,5 +1,5 @@
 from datasets.day_night import DayNightDataset
-from models.SimpleModel import SimpleModel
+from models.simple_model import SimpleModel
 from utils.config import TrainingConfig
 from utils.trainer import Trainer
 
