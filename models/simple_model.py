@@ -1,7 +1,7 @@
 from models.custom_module import CustomModule
 from models.decoder import Decoder
 from models.encoder import Encoder
-from models.encoder_decoder_pair import EncoderDecoderPair
+from models.autoencoder import Autoencoder
 
 import torch
 import torch.nn as nn
@@ -9,17 +9,17 @@ from torch.optim import Adam
 
 
 class SimpleModel(CustomModule):
-    enc_dec_day: EncoderDecoderPair
-    enc_dec_night: EncoderDecoderPair
+    autoencoder_day: Autoencoder
+    autoencoder_night: Autoencoder
 
     def __init__(self):
         self.encoder = Encoder()  # TODO pre-trained (later in project)
-        self.enc_dec_day = EncoderDecoderPair(self.encoder, Decoder())
-        self.enc_dec_night = EncoderDecoderPair(self.encoder, Decoder())
+        self.autoencoder_day = Autoencoder(self.encoder, Decoder())
+        self.autoencoder_night = Autoencoder(self.encoder, Decoder())
         self.loss_fn = nn.L1Loss()  # TODO Which loss?
 
-        self.optimizer_day = Adam(self.enc_dec_day.parameters())  # TODO put args in config (lr, weight_decay)
-        self.optimizer_night = Adam(self.enc_dec_night.parameters())  # TODO put args in config (lr, weight_decay)
+        self.optimizer_day = Adam(self.autoencoder_day.parameters())  # TODO put args in config (lr, weight_decay)
+        self.optimizer_night = Adam(self.autoencoder_night.parameters())  # TODO put args in config (lr, weight_decay)
 
     def train_epoch(self, train_loader, **kwargs):
         loss_day_sum, loss_night_sum = 0, 0
@@ -28,8 +28,8 @@ class SimpleModel(CustomModule):
             # zero day gradients
             self.optimizer_day.zero_grad()
 
-            # train first pair
-            out_day = self.enc_dec_day(day_img)
+            # train day autoencoder
+            out_day = self.autoencoder_day(day_img)
             loss_day = self.loss_fn(out_day, day_img)
 
             # optimize
@@ -39,8 +39,8 @@ class SimpleModel(CustomModule):
             # zero night gradients
             self.optimizer_night.zero_grad()
 
-            # train first pair
-            out_night = self.enc_dec_night(night_img)
+            # train night autoencoder
+            out_night = self.autoencoder_night(night_img)
             loss_night = self.loss_fn(out_night, night_img)
 
             # optimize
@@ -60,10 +60,10 @@ class SimpleModel(CustomModule):
 
         with torch.no_grad():
             for (day_img, night_img) in val_loader:
-                out_day = self.enc_dec_day(day_img)
+                out_day = self.autoencoder_day(day_img)
                 loss_day = self.loss_fn(out_day, day_img)
 
-                out_night = self.enc_dec_night(night_img)
+                out_night = self.autoencoder_night(night_img)
                 loss_night = self.loss_fn(out_night, night_img)
 
                 loss_day_sum += loss_day
@@ -76,10 +76,10 @@ class SimpleModel(CustomModule):
 
     def train(self):
         self.encoder.train()
-        self.enc_dec_day.decoder.train()
-        self.enc_dec_night.decoder.train()
+        self.autoencoder_day.decoder.train()
+        self.autoencoder_night.decoder.train()
 
     def eval(self):
         self.encoder.eval()
-        self.enc_dec_day.decoder.eval()
-        self.enc_dec_night.decoder.eval()
+        self.autoencoder_day.decoder.eval()
+        self.autoencoder_night.decoder.eval()

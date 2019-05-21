@@ -4,7 +4,7 @@ from models.decoder import Decoder
 from models.encoder import Encoder
 
 
-class EncoderDecoderPair(nn.Module):
+class Autoencoder(nn.Module):
     encoder: Encoder
     decoder: Decoder
 
