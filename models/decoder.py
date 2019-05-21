@@ -19,4 +19,4 @@ class Decoder(nn.Module):
         )
 
     def forward(self, x):
-        self.decoder(x)
+        return self.decoder(x)
