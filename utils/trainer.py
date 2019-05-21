@@ -19,8 +19,13 @@ class Trainer:
         if not os.path.exists(config.log_path):
             os.makedirs(config.log_path)
 
+        # log: indicate start of new training process
+        with open(os.path.join(self.config.log_path, 'log.txt'), 'a+') as f:
+            f.write(f'\n\n--------------------------------------------------------------------------------------\n\n')
+
         # log config
-        with open(os.path.join(config.log_path, 'config.pickle'), 'wb+') as f:
+        # TODO this does nothing apparently
+        with open(os.path.join(config.log_path, 'config.pickle'), 'ab+') as f:
             pickle.dump(config, f)
 
     def train(self):
@@ -36,7 +41,7 @@ class Trainer:
 
             # log results
             with open(os.path.join(self.config.log_path, 'log.txt'), 'a+') as f:
-                f.write(f'[Epoch {epoch}] Train day loss: {info["loss_day"]} Train night loss: {info["loss_night"]}')
+                f.write(f'[Epoch {epoch}] Train day loss: {info["loss_day"]} Train night loss: {info["loss_night"]}\n')
 
             # set model to validation mode
             self.model.eval()
@@ -49,4 +54,4 @@ class Trainer:
 
             # log results
             with open(os.path.join(self.config.log_path, 'log.txt'), 'a+') as f:
-                f.write(f'[Epoch {epoch}] Val day loss: {info["loss_day"]} Val night loss: {info["loss_night"]}')
+                f.write(f'[Epoch {epoch}] Val day loss: {info["loss_day"]} Val night loss: {info["loss_night"]}\n')
