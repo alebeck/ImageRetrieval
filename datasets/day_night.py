@@ -15,6 +15,8 @@ class DayNightDataset(Dataset):
             ToTensor()
         ])
 
+        print("Loading data...")
+
         for filename in os.listdir(path_day):
             with open(os.path.join(path_day, filename), 'rb') as file:
                 img = Image.open(file)

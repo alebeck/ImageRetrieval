@@ -1,5 +1,6 @@
 import os
 import pickle
+from datetime import datetime
 
 from utils.config import TrainingConfig
 from utils.data import DataSplitter
@@ -15,17 +16,13 @@ class Trainer:
             val_size=config.val_size
         )
         self.model = config.model(**config.model_args)
+        self.log_path = os.path.join(config.log_path, str(datetime.now()))
 
-        if not os.path.exists(config.log_path):
-            os.makedirs(config.log_path)
-
-        # log: indicate start of new training process
-        with open(os.path.join(self.config.log_path, 'log.txt'), 'a+') as f:
-            f.write(f'\n\n--------------------------------------------------------------------------------------\n\n')
+        if not os.path.exists(self.log_path):
+            os.makedirs(self.log_path)
 
         # log config
-        # TODO this does nothing apparently
-        with open(os.path.join(config.log_path, 'config.pickle'), 'ab+') as f:
+        with open(os.path.join(self.log_path, 'config.pickle'), 'ab+') as f:
             pickle.dump(config, f)
 
     def train(self):
@@ -40,8 +37,9 @@ class Trainer:
             info = self.model.train_epoch(train_loader)
 
             # log results
-            with open(os.path.join(self.config.log_path, 'log.txt'), 'a+') as f:
+            with open(os.path.join(self.log_path, 'log.txt'), 'a+') as f:
                 f.write(f'[Epoch {epoch}] Train day loss: {info["loss_day"]} Train night loss: {info["loss_night"]}\n')
+                print(f'[Epoch {epoch}] Train day loss: {info["loss_day"]} Train night loss: {info["loss_night"]}')
 
             # set model to validation mode
             self.model.eval()
@@ -53,5 +51,6 @@ class Trainer:
             info = self.model.validate(val_loader)
 
             # log results
-            with open(os.path.join(self.config.log_path, 'log.txt'), 'a+') as f:
+            with open(os.path.join(self.log_path, 'log.txt'), 'a+') as f:
                 f.write(f'[Epoch {epoch}] Val day loss: {info["loss_day"]} Val night loss: {info["loss_night"]}\n')
+                print(f'[Epoch {epoch}] Train day loss: {info["loss_day"]} Train night loss: {info["loss_night"]}')
