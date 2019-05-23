@@ -13,18 +13,21 @@ class SimpleModel(CustomModule):
     autoencoder_night: Autoencoder
 
     def __init__(self):
-        self.encoder = Encoder()  # TODO pre-trained (later in project)
-        self.autoencoder_day = Autoencoder(self.encoder, Decoder())
-        self.autoencoder_night = Autoencoder(self.encoder, Decoder())
+        encoder = Encoder()  # TODO pre-trained (later in project)
+        self.autoencoder_day = Autoencoder(encoder, Decoder())
+        self.autoencoder_night = Autoencoder(encoder, Decoder())
         self.loss_fn = nn.L1Loss()  # TODO Which loss?
 
         self.optimizer_day = Adam(self.autoencoder_day.parameters())  # TODO put args in config (lr, weight_decay)
         self.optimizer_night = Adam(self.autoencoder_night.parameters())  # TODO put args in config (lr, weight_decay)
 
-    def train_epoch(self, train_loader, **kwargs):
+    def train_epoch(self, train_loader, use_cuda, **kwargs):
         loss_day_sum, loss_night_sum = 0, 0
 
-        for (day_img, night_img) in train_loader:
+        for day_img, night_img in train_loader:
+            if use_cuda:
+                day_img, night_img = day_img.cuda(), night_img.cuda()
+
             # zero day gradients
             self.optimizer_day.zero_grad()
 
@@ -55,12 +58,15 @@ class SimpleModel(CustomModule):
 
         return {'loss_day': loss_day_mean, 'loss_night': loss_night_mean}
 
-    def validate(self, val_loader, **kwargs):
+    def validate(self, val_loader, use_cuda, **kwargs):
         loss_day_sum, loss_night_sum = 0, 0
         day_img, night_img, out_day, out_night = (None,) * 4
 
         with torch.no_grad():
-            for (day_img, night_img) in val_loader:
+            for day_img, night_img in val_loader:
+                if use_cuda:
+                    day_img, night_img = day_img.cuda(), night_img.cuda()
+
                 out_day = self.autoencoder_day(day_img)
                 loss_day = self.loss_fn(out_day, day_img)
 
@@ -85,11 +91,13 @@ class SimpleModel(CustomModule):
         }
 
     def train(self):
-        self.encoder.train()
         self.autoencoder_day.decoder.train()
         self.autoencoder_night.decoder.train()
 
     def eval(self):
-        self.encoder.eval()
         self.autoencoder_day.decoder.eval()
         self.autoencoder_night.decoder.eval()
+
+    def cuda(self):
+        self.autoencoder_day.decoder.cuda()
+        self.autoencoder_night.decoder.cuda()

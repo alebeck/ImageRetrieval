@@ -7,11 +7,11 @@ class CustomModule:
     """
 
     @abstractmethod
-    def train_epoch(self, train_loader, **kwargs):
+    def train_epoch(self, train_loader, use_cuda, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
-    def validate(self, val_loader, **kwargs):
+    def validate(self, val_loader, use_cuda, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
@@ -20,4 +20,8 @@ class CustomModule:
 
     @abstractmethod
     def eval(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def cuda(self):
         raise NotImplementedError
