@@ -91,13 +91,13 @@ class SimpleModel(CustomModule):
         }
 
     def train(self):
-        self.autoencoder_day.decoder.train()
-        self.autoencoder_night.decoder.train()
+        self.autoencoder_day.train()
+        self.autoencoder_night.train()
 
     def eval(self):
-        self.autoencoder_day.decoder.eval()
-        self.autoencoder_night.decoder.eval()
+        self.autoencoder_day.eval()
+        self.autoencoder_night.eval()
 
     def cuda(self):
-        self.autoencoder_day.decoder.cuda()
-        self.autoencoder_night.decoder.cuda()
+        self.autoencoder_day.cuda()
+        self.autoencoder_night.cuda()
