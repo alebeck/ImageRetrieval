@@ -66,4 +66,4 @@ class Trainer:
 
             # save sample images
             for name, img in info['sample'].items():
-                ToPILImage()(img).save(os.path.join(log_path, f'{epoch}_{name}.jpeg'), 'JPEG')
+                ToPILImage()(img.cpu()).save(os.path.join(log_path, f'{epoch}_{name}.jpeg'), 'JPEG')
