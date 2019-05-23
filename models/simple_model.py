@@ -57,6 +57,7 @@ class SimpleModel(CustomModule):
 
     def validate(self, val_loader, **kwargs):
         loss_day_sum, loss_night_sum = 0, 0
+        day_img, night_img, out_day, out_night = (None,) * 4
 
         with torch.no_grad():
             for (day_img, night_img) in val_loader:
@@ -72,7 +73,16 @@ class SimpleModel(CustomModule):
         loss_day_mean = loss_day_sum / len(val_loader)
         loss_night_mean = loss_night_sum / len(val_loader)
 
-        return {'loss_day': loss_day_mean, 'loss_night': loss_night_mean}
+        return {
+            'loss_day': loss_day_mean,
+            'loss_night': loss_night_mean,
+            'sample': {
+                'day_img': day_img[0],
+                'night_img': night_img[0],
+                'out_day': out_day[0],
+                'out_night': out_night[0]
+            }
+        }
 
     def train(self):
         self.encoder.train()

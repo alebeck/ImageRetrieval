@@ -5,7 +5,7 @@ from torch.utils.data.sampler import SubsetRandomSampler
 
 class DataSplitter(DataLoader):
 
-    def __init__(self, dataset, batch_size, val_size, num_workers=4, shuffle=True):
+    def __init__(self, dataset, batch_size, val_size, num_workers=0, shuffle=True):
         super().__init__(dataset, batch_size)
 
         # setup samplers

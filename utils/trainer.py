@@ -2,6 +2,8 @@ import os
 import pickle
 from datetime import datetime
 
+from torchvision.transforms import ToPILImage
+
 from utils.config import TrainingConfig
 from utils.data import DataSplitter
 
@@ -22,11 +24,13 @@ class Trainer:
             os.makedirs(self.log_path)
 
         # log config
-        with open(os.path.join(self.log_path, 'config.pickle'), 'ab+') as f:
+        with open(os.path.join(self.log_path, 'config.pickle'), 'wb+') as f:
             pickle.dump(config, f)
 
     def train(self):
         for epoch in range(self.config.epochs):
+            ### TRAINING STEP ###
+
             # set model to train mode
             self.model.train()
 
@@ -36,10 +40,13 @@ class Trainer:
             # train model for one epoch
             info = self.model.train_epoch(train_loader)
 
-            # log results
+            # log losses
+            log_str = f'[Epoch {epoch}] Train day loss: {info["loss_day"]} Train night loss: {info["loss_night"]}'
+            print(log_str)
             with open(os.path.join(self.log_path, 'log.txt'), 'a+') as f:
-                f.write(f'[Epoch {epoch}] Train day loss: {info["loss_day"]} Train night loss: {info["loss_night"]}\n')
-                print(f'[Epoch {epoch}] Train day loss: {info["loss_day"]} Train night loss: {info["loss_night"]}')
+                f.write(log_str + '\n')
+
+            ### VALIDATION STEP ###
 
             # set model to validation mode
             self.model.eval()
@@ -50,7 +57,13 @@ class Trainer:
             # validate model
             info = self.model.validate(val_loader)
 
-            # log results
+            # log losses
+            log_str = f'[Epoch {epoch}] Val day loss: {info["loss_day"]} Val night loss: {info["loss_night"]}'
+            print(log_str)
             with open(os.path.join(self.log_path, 'log.txt'), 'a+') as f:
-                f.write(f'[Epoch {epoch}] Val day loss: {info["loss_day"]} Val night loss: {info["loss_night"]}\n')
-                print(f'[Epoch {epoch}] Train day loss: {info["loss_day"]} Train night loss: {info["loss_night"]}')
+                f.write(log_str + '\n')
+
+            # save sample images
+            for name, img in info['sample'].items():
+                img = ToPILImage()(img.squeeze(0))
+                img.save(os.path.join(self.log_path, f'{epoch}_{name}.jpeg'), 'JPEG')
