@@ -7,7 +7,7 @@ class CustomModule:
     """
 
     @abstractmethod
-    def train_epoch(self, train_loader, use_cuda, **kwargs):
+    def train_epoch(self, train_loader, epoch, use_cuda, **kwargs):
         raise NotImplementedError
 
     @abstractmethod

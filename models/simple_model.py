@@ -1,11 +1,12 @@
+import torch
+import torch.nn as nn
+from torch.optim import Adam
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+
 from models.custom_module import CustomModule
 from models.decoder import Decoder
 from models.encoder import Encoder
 from models.autoencoder import Autoencoder
-
-import torch
-import torch.nn as nn
-from torch.optim import Adam
 
 
 class SimpleModel(CustomModule):
@@ -21,7 +22,11 @@ class SimpleModel(CustomModule):
         self.optimizer_day = Adam(self.autoencoder_day.parameters())  # TODO put args in config (lr, weight_decay)
         self.optimizer_night = Adam(self.autoencoder_night.parameters())  # TODO put args in config (lr, weight_decay)
 
-    def train_epoch(self, train_loader, use_cuda, **kwargs):
+        # initialize scheduler
+        self.scheduler_day = ReduceLROnPlateau(self.optimizer_day, patience=100) # TODO patience in args
+        self.scheduler_night = ReduceLROnPlateau(self.optimizer_night, patience=100)  # TODO patience in args
+
+    def train_epoch(self, train_loader, epoch, use_cuda, **kwargs):
         loss_day_sum, loss_night_sum = 0, 0
 
         for day_img, night_img in train_loader:
@@ -55,6 +60,9 @@ class SimpleModel(CustomModule):
 
         loss_day_mean = loss_day_sum / len(train_loader)
         loss_night_mean = loss_night_sum / len(train_loader)
+
+        self.scheduler_day.step(loss_day_mean, epoch)
+        self.scheduler_night.step(loss_night_mean, epoch)
 
         return {'loss_day': loss_day_mean, 'loss_night': loss_night_mean}
 

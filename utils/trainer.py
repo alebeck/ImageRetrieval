@@ -42,7 +42,7 @@ class Trainer:
             self.model.train()
 
             # train model for one epoch
-            info = self.model.train_epoch(self.data.train_loader, use_cuda)
+            info = self.model.train_epoch(self.data.train_loader, epoch, use_cuda)
 
             # log losses
             log_str = f'[Epoch {epoch}] Train day loss: {info["loss_day"]} Train night loss: {info["loss_night"]}'
