@@ -25,3 +25,7 @@ class CustomModule:
     @abstractmethod
     def cuda(self):
         raise NotImplementedError
+
+    @abstractmethod
+    def state_dict(self):
+        raise NotImplementedError

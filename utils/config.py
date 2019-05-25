@@ -15,3 +15,4 @@ class TrainingConfig:
     epochs: int
     val_size: float
     log_path: str
+    save_every: int # save model every save_every epochs

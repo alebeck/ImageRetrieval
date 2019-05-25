@@ -16,6 +16,7 @@ config = TrainingConfig(
     epochs=10,
     val_size=0.2,
     log_path='log',
+    save_every=100
 )
 
 trainer = Trainer(config)

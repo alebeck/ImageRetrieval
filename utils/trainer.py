@@ -67,3 +67,7 @@ class Trainer:
             # save sample images
             for name, img in info['sample'].items():
                 ToPILImage()(img.cpu()).save(os.path.join(log_path, f'{epoch}_{name}.jpeg'), 'JPEG')
+
+            # save model weights
+            if epoch % self.config.save_every == 0:
+                torch.save(self.model.state_dict(), os.path.join(log_path, f'{epoch}_weights.pt'))

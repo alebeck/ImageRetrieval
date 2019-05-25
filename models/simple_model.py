@@ -109,3 +109,10 @@ class SimpleModel(CustomModule):
     def cuda(self):
         self.autoencoder_day.cuda()
         self.autoencoder_night.cuda()
+
+    def state_dict(self):
+        return {
+            'encoder': self.autoencoder_day.encoder.state_dict(),
+            'decoder_day': self.autoencoder_day.decoder.state_dict(),
+            'decoder_night': self.autoencoder_night.decoder.state_dict()
+        }
