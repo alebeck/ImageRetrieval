@@ -7,12 +7,18 @@ from utils.trainer import Trainer
 config = TrainingConfig(
     dataset=DayNightDataset,
     dataset_args={
-        'path_day': 'data/sun/right',
-        'path_night': 'data/night/right',
+        'paths_day': [
+            'data/sun/right',
+            'data/sun/left',
+        ],
+        'paths_night': [
+            'data/night/right',
+            'data/night/left',
+        ],
     },
     model=SimpleModel,
     model_args={},
-    batch_size=50,
+    batch_size=64,
     epochs=10,
     val_size=0.2,
     log_path='log',
@@ -20,5 +26,7 @@ config = TrainingConfig(
 )
 
 trainer = Trainer(config)
+
+print(f'{len(trainer.data)} batches')
 
 trainer.train()
