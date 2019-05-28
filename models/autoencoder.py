@@ -1,19 +1,21 @@
 import torch.nn as nn
 
 from models.decoder import Decoder
-from models.encoder import Encoder
+from models.encoder import LowerEncoder, UpperEncoder
 
 
 class Autoencoder(nn.Module):
-    encoder: Encoder
+    encoder_lower: LowerEncoder
+    encoder_upper: UpperEncoder
     decoder: Decoder
 
-    def __init__(self, encoder: Encoder, decoder: Decoder):
+    def __init__(self, encoder_lower: LowerEncoder, encoder_upper: UpperEncoder, decoder: Decoder):
         super().__init__()
-        self.encoder = encoder
+        self.encoder_lower = encoder_lower
+        self.encoder_upper = encoder_upper
         self.decoder = decoder
 
-    def forward(self, input):
-        latent = self.encoder(input)
+    def forward(self, img):
+        latent = self.encoder_upper(self.encoder_lower(img))
         out = self.decoder(latent)
         return out

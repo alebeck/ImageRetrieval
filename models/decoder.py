@@ -30,4 +30,7 @@ class Decoder(nn.Module):
         x = f.relu(self.convt3_1(x))
         x = f.relu(self.convt3_2(x))
 
+        # limit to [0; 1]
+        x = x.clamp(0., 1.)
+
         return x

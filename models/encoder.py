@@ -2,7 +2,10 @@ from torch import nn
 import torch.nn.functional as f
 
 
-class Encoder(nn.Module):
+class LowerEncoder(nn.Module):
+    """
+    Domain-specific encoder stage for features of low level of abstraction.
+    """
 
     def __init__(self):
         super().__init__()
@@ -10,6 +13,22 @@ class Encoder(nn.Module):
         self.conv1_1 = nn.Conv2d(3, 16, 3, padding=1)
         self.conv1_2 = nn.Conv2d(16, 32, 3, padding=1)
         self.pool1 = nn.MaxPool2d(2, stride=2)
+
+    def forward(self, x):
+        x = f.relu(self.conv1_1(x))
+        x = f.relu(self.conv1_2(x))
+        x = self.pool1(x)
+
+        return x
+
+class UpperEncoder(nn.Module):
+    """
+    Domain-invariant encoder stage for features of high level of abstraction. Is supposed
+    to be shared by multiple AutoEncoder
+    """
+
+    def __init__(self):
+        super().__init__()
 
         self.conv2_1 = nn.Conv2d(32, 64, 3, padding=1)
         self.conv2_2 = nn.Conv2d(64, 64, 3, padding=1)
@@ -22,10 +41,6 @@ class Encoder(nn.Module):
         self.pool3 = nn.MaxPool2d(2, stride=2)
 
     def forward(self, x):
-        x = f.relu(self.conv1_1(x))
-        x = f.relu(self.conv1_2(x))
-        x = self.pool1(x)
-
         x = f.relu(self.conv2_1(x))
         x = f.relu(self.conv2_2(x))
         x = f.relu(self.conv2_3(x))

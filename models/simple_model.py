@@ -5,7 +5,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from models.custom_module import CustomModule
 from models.decoder import Decoder
-from models.encoder import Encoder
+from models.encoder import LowerEncoder, UpperEncoder
 from models.autoencoder import Autoencoder
 
 
@@ -14,9 +14,10 @@ class SimpleModel(CustomModule):
     autoencoder_night: Autoencoder
 
     def __init__(self):
-        encoder = Encoder()  # TODO pre-trained (later in project)
-        self.autoencoder_day = Autoencoder(encoder, Decoder())
-        self.autoencoder_night = Autoencoder(encoder, Decoder())
+        # share weights of the upper encoder stage
+        encoder_upper = UpperEncoder()
+        self.autoencoder_day = Autoencoder(LowerEncoder(), encoder_upper, Decoder())
+        self.autoencoder_night = Autoencoder(LowerEncoder(), encoder_upper, Decoder())
         self.loss_fn = nn.L1Loss()  # TODO Which loss?
 
         self.optimizer_day = Adam(self.autoencoder_day.parameters())  # TODO put args in config (lr, weight_decay)
@@ -112,7 +113,9 @@ class SimpleModel(CustomModule):
 
     def state_dict(self):
         return {
-            'encoder': self.autoencoder_day.encoder.state_dict(),
+            'encoder_lower_day': self.autoencoder_day.encoder_lower.state_dict(),
+            'encoder_lower_night': self.autoencoder_night.encoder_lower.state_dict(),
+            'encoder_upper': self.autoencoder_day.encoder_upper.state_dict(),
             'decoder_day': self.autoencoder_day.decoder.state_dict(),
             'decoder_night': self.autoencoder_night.decoder.state_dict()
         }
