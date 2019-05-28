@@ -3,11 +3,9 @@ from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
 
-class DataSplitter(DataLoader):
+class DataSplitter:
 
     def __init__(self, dataset, batch_size, val_size, num_workers=0, shuffle=True):
-        super().__init__(dataset, batch_size)
-
         # setup samplers
         idx = list(range(len(dataset)))
         if shuffle:

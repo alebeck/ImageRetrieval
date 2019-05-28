@@ -27,6 +27,6 @@ config = TrainingConfig(
 
 trainer = Trainer(config)
 
-print(f'{len(trainer.data)} batches')
+print(f'{len(trainer.data.train_loader)} batches')
 
 trainer.train()
