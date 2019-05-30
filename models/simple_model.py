@@ -10,18 +10,18 @@ from models.autoencoder import Autoencoder
 
 
 class SimpleModel(CustomModule):
-    autoencoder_day: Autoencoder
-    autoencoder_night: Autoencoder
+    ae_day: Autoencoder
+    ae_night: Autoencoder
 
     def __init__(self):
         # share weights of the upper encoder stage
         encoder_upper = UpperEncoder()
-        self.autoencoder_day = Autoencoder(LowerEncoder(), encoder_upper, Decoder())
-        self.autoencoder_night = Autoencoder(LowerEncoder(), encoder_upper, Decoder())
+        self.ae_day = Autoencoder(LowerEncoder(), encoder_upper, Decoder())
+        self.ae_night = Autoencoder(LowerEncoder(), encoder_upper, Decoder())
         self.loss_fn = nn.L1Loss()  # TODO Which loss?
 
-        self.optimizer_day = Adam(self.autoencoder_day.parameters())  # TODO put args in config (lr, weight_decay)
-        self.optimizer_night = Adam(self.autoencoder_night.parameters())  # TODO put args in config (lr, weight_decay)
+        self.optimizer_day = Adam(self.ae_day.parameters())  # TODO put args in config (lr, weight_decay)
+        self.optimizer_night = Adam(self.ae_night.parameters())  # TODO put args in config (lr, weight_decay)
 
         # initialize scheduler
         self.scheduler_day = ReduceLROnPlateau(self.optimizer_day, patience=100, verbose=True) # TODO patience in args
@@ -38,7 +38,7 @@ class SimpleModel(CustomModule):
             self.optimizer_day.zero_grad()
 
             # train day autoencoder
-            out_day = self.autoencoder_day(day_img)
+            out_day = self.ae_day(day_img)
             loss_day = self.loss_fn(out_day, day_img)
 
             # optimize
@@ -49,7 +49,7 @@ class SimpleModel(CustomModule):
             self.optimizer_night.zero_grad()
 
             # train night autoencoder
-            out_night = self.autoencoder_night(night_img)
+            out_night = self.ae_night(night_img)
             loss_night = self.loss_fn(out_night, night_img)
 
             # optimize
@@ -76,10 +76,10 @@ class SimpleModel(CustomModule):
                 if use_cuda:
                     day_img, night_img = day_img.cuda(), night_img.cuda()
 
-                out_day = self.autoencoder_day(day_img)
+                out_day = self.ae_day(day_img)
                 loss_day = self.loss_fn(out_day, day_img)
 
-                out_night = self.autoencoder_night(night_img)
+                out_night = self.ae_night(night_img)
                 loss_night = self.loss_fn(out_night, night_img)
 
                 loss_day_sum += loss_day
@@ -88,6 +88,10 @@ class SimpleModel(CustomModule):
         loss_day_mean = loss_day_sum / len(val_loader)
         loss_night_mean = loss_night_sum / len(val_loader)
 
+        # domain translation
+        day_to_night = self.ae_night.decoder(self.ae_day.encoder_upper(self.ae_day.encoder_lower(day_img[0].unsqueeze(0))))
+        night_to_day = self.ae_day.decoder(self.ae_night.encoder_upper(self.ae_night.encoder_lower(night_img[0].unsqueeze(0))))
+
         return {
             'loss_day': loss_day_mean,
             'loss_night': loss_night_mean,
@@ -95,27 +99,29 @@ class SimpleModel(CustomModule):
                 'day_img': day_img[0],
                 'night_img': night_img[0],
                 'out_day': out_day[0],
-                'out_night': out_night[0]
+                'out_night': out_night[0],
+                'day_to_night': day_to_night[0],
+                'night_to_day': night_to_day[0]
             }
         }
 
     def train(self):
-        self.autoencoder_day.train()
-        self.autoencoder_night.train()
+        self.ae_day.train()
+        self.ae_night.train()
 
     def eval(self):
-        self.autoencoder_day.eval()
-        self.autoencoder_night.eval()
+        self.ae_day.eval()
+        self.ae_night.eval()
 
     def cuda(self):
-        self.autoencoder_day.cuda()
-        self.autoencoder_night.cuda()
+        self.ae_day.cuda()
+        self.ae_night.cuda()
 
     def state_dict(self):
         return {
-            'encoder_lower_day': self.autoencoder_day.encoder_lower.state_dict(),
-            'encoder_lower_night': self.autoencoder_night.encoder_lower.state_dict(),
-            'encoder_upper': self.autoencoder_day.encoder_upper.state_dict(),
-            'decoder_day': self.autoencoder_day.decoder.state_dict(),
-            'decoder_night': self.autoencoder_night.decoder.state_dict()
+            'encoder_lower_day': self.ae_day.encoder_lower.state_dict(),
+            'encoder_lower_night': self.ae_night.encoder_lower.state_dict(),
+            'encoder_upper': self.ae_day.encoder_upper.state_dict(),
+            'decoder_day': self.ae_day.decoder.state_dict(),
+            'decoder_night': self.ae_night.decoder.state_dict()
         }
