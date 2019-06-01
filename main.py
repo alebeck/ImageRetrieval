@@ -10,10 +10,14 @@ config = TrainingConfig(
         'paths_day': [
             'data/sun/right',
             'data/sun/left',
+            'data/overcast-summer/right',
+            'data/overcast-summer/left',
         ],
         'paths_night': [
             'data/night/right',
             'data/night/left',
+            'data/night-rain/right',
+            'data/night-rain/left',
         ],
     },
     model=SimpleModel,
