@@ -36,7 +36,7 @@ def evaluate(encoder_anchor: Autoencoder, encoder_opposite: Autoencoder, config:
             positive = encoder_opposite.encode(positive_img)
             negative = encoder_opposite.encode(negative_img)
 
-            loss_sum += triplet_margin_loss(anchor, positive, negative)
+            loss_sum += triplet_margin_loss(anchor, positive, negative, reduction='sum')
 
     loss_mean = loss_sum / len(triplet_loader)
     return loss_mean
