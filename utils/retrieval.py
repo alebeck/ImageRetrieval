@@ -1,3 +1,4 @@
+import torch
 from torch import cuda
 from torch.nn.functional import triplet_margin_loss
 from torch.utils.data import DataLoader
@@ -25,16 +26,17 @@ def evaluate(encoder_anchor: Autoencoder, encoder_opposite: Autoencoder, config:
 
     loss_sum = 0
 
-    for anchor_img, positive_img, negative_img in triplet_loader:
+    with torch.no_grad():
+        for anchor_img, positive_img, negative_img in triplet_loader:
 
-        if use_cuda:
-            anchor_img, positive_img, negative_img = anchor_img.cuda(), positive_img.cuda(), negative_img.cuda()
+            if use_cuda:
+                anchor_img, positive_img, negative_img = anchor_img.cuda(), positive_img.cuda(), negative_img.cuda()
 
-        anchor = encoder_anchor.encode(anchor_img)
-        positive = encoder_opposite.encode(positive_img)
-        negative = encoder_opposite.encode(negative_img)
+            anchor = encoder_anchor.encode(anchor_img)
+            positive = encoder_opposite.encode(positive_img)
+            negative = encoder_opposite.encode(negative_img)
 
-        loss_sum += triplet_margin_loss(anchor, positive, negative)
+            loss_sum += triplet_margin_loss(anchor, positive, negative)
 
     loss_mean = loss_sum / len(triplet_loader)
     return loss_mean
