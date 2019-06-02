@@ -14,7 +14,8 @@ def evaluate(encoder_anchor: Autoencoder, encoder_opposite: Autoencoder, config:
     )
 
     # check cuda availability
-    if cuda.is_available():
+    use_cuda = cuda.is_available()
+    if use_cuda:
         print('Using GPU...')
         encoder_anchor.cuda()
         encoder_opposite.cuda()
@@ -25,6 +26,9 @@ def evaluate(encoder_anchor: Autoencoder, encoder_opposite: Autoencoder, config:
     loss_sum = 0
 
     for anchor_img, positive_img, negative_img in triplet_loader:
+
+        if use_cuda:
+            anchor_img, positive_img, negative_img = anchor_img.cuda(), positive_img.cuda(), negative_img.cuda()
 
         anchor = encoder_anchor.encode(anchor_img)
         positive = encoder_opposite.encode(positive_img)
