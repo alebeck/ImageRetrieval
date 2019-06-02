@@ -16,6 +16,12 @@ class Autoencoder(nn.Module):
         self.decoder = decoder
 
     def forward(self, img):
-        latent = self.encoder_upper(self.encoder_lower(img))
+        latent = self.encode(img)
         out = self.decoder(latent)
         return out
+
+    def encode(self, img):
+        return self.encoder_upper(self.encoder_lower(img))
+
+    def decode(self, latent):
+        return self.decoder(latent)

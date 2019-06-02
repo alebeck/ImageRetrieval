@@ -25,6 +25,7 @@ class LowerEncoder(nn.Module):
 
         return x
 
+
 class UpperEncoder(nn.Module):
     """
     Domain-invariant encoder stage for features of high level of abstraction. Is supposed

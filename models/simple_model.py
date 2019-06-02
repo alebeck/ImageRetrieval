@@ -24,7 +24,7 @@ class SimpleModel(CustomModule):
         self.optimizer_night = Adam(self.ae_night.parameters())  # TODO put args in config (lr, weight_decay)
 
         # initialize scheduler
-        self.scheduler_day = ReduceLROnPlateau(self.optimizer_day, patience=100, verbose=True) # TODO patience in args
+        self.scheduler_day = ReduceLROnPlateau(self.optimizer_day, patience=100, verbose=True)  # TODO patience in args
         self.scheduler_night = ReduceLROnPlateau(self.optimizer_night, patience=100, verbose=True)  # TODO patience in args
 
     def train_epoch(self, train_loader, epoch, use_cuda, **kwargs):
@@ -89,8 +89,8 @@ class SimpleModel(CustomModule):
         loss_night_mean = loss_night_sum / len(val_loader)
 
         # domain translation
-        day_to_night = self.ae_night.decoder(self.ae_day.encoder_upper(self.ae_day.encoder_lower(day_img[0].unsqueeze(0))))
-        night_to_day = self.ae_day.decoder(self.ae_night.encoder_upper(self.ae_night.encoder_lower(night_img[0].unsqueeze(0))))
+        day_to_night = self.ae_night.decode(self.ae_day.encode(day_img[0].unsqueeze(0)))
+        night_to_day = self.ae_day.decode(self.ae_night.encode(night_img[0].unsqueeze(0)))
 
         return {
             'loss_day': loss_day_mean,
