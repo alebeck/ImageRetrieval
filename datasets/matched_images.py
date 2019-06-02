@@ -34,8 +34,6 @@ class MatchedImagesDataset(Dataset):
                     img = Image.open(file)
                     self.opposites.append(transform(img))
 
-        print(len(self))
-
     def __len__(self):
         return min(len(self.anchors), len(self.opposites))
 
@@ -43,8 +41,6 @@ class MatchedImagesDataset(Dataset):
         negative_index = index
         while negative_index == index:
             negative_index = randint(0, len(self) - 1)
-
-        print(str(index) + ', ' + str(negative_index))
 
         anchor = self.anchors[index]
         positive = self.opposites[index]

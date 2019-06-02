@@ -16,3 +16,10 @@ class TrainingConfig:
     val_size: float
     log_path: str
     save_every: int  # save model every save_every epochs
+
+
+@dataclass
+class RetrievalConfig:
+    dataset: Type[Dataset]
+    dataset_args: dict
+    batch_size: int
