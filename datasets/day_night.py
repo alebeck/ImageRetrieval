@@ -18,13 +18,13 @@ class DayNightDataset(Dataset):
         print("Loading data...")
 
         for path in paths_day:
-            for filename in os.listdir(path):
+            for filename in sorted(os.listdir(path)):
                 with open(os.path.join(path, filename), 'rb') as file:
                     img = Image.open(file)
                     self.images_day.append(transform(img))
 
         for path in paths_night:
-            for filename in os.listdir(path):
+            for filename in sorted(os.listdir(path)):
                 with open(os.path.join(path, filename), 'rb') as file:
                     img = Image.open(file)
                     self.images_night.append(transform(img))
