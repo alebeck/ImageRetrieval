@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Type
 
 from torch.utils.data import Dataset
-from models.custom_module import CustomModule
+from models.abstract import CustomModule
 
 
 @dataclass
