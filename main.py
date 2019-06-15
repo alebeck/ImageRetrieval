@@ -1,5 +1,5 @@
 from datasets.day_night import DayNightDataset
-from models.simple_model import SimpleModel
+from models.cycle_model import CycleModel
 from utils.config import TrainingConfig
 from utils.trainer import Trainer
 
@@ -20,7 +20,7 @@ config = TrainingConfig(
             'data/night-rain/left',
         ],
     },
-    model=SimpleModel,
+    model=CycleModel,
     model_args={},
     batch_size=64,
     epochs=10,
