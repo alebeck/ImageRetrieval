@@ -28,8 +28,8 @@ class SimpleModel(CustomModule, EmbeddingGenerator):
         self.optimizer_night = Adam(self.ae_night.parameters())  # TODO put args in config (lr, weight_decay)
 
         # initialize scheduler
-        self.scheduler_day = ReduceLROnPlateau(self.optimizer_day, patience=100, verbose=True)  # TODO patience in args
-        self.scheduler_night = ReduceLROnPlateau(self.optimizer_night, patience=100, verbose=True)  # TODO patience in args
+        self.scheduler_day = ReduceLROnPlateau(self.optimizer_day, patience=50, verbose=True)  # TODO patience in args
+        self.scheduler_night = ReduceLROnPlateau(self.optimizer_night, patience=50, verbose=True)  # TODO patience in args
 
     def __call__(self, input):
         raise NotImplementedError # TODO
