@@ -15,7 +15,8 @@ class Trainer:
         self.data = DataSplitter(
             dataset=config.dataset(**config.dataset_args),
             batch_size=config.batch_size,
-            val_size=config.val_size
+            val_size=config.val_size,
+            shuffle=False
         )
         self.model = config.model(**config.model_args)
 

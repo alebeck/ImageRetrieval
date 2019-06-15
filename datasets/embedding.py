@@ -11,7 +11,7 @@ from models.abstract import CustomModule, EmbeddingGenerator
 
 class EmbeddingDataset(Dataset):
 
-    def __init__(self, model_class, model_args, weights_path, paths_day, paths_night, img_size=128):
+    def __init__(self, model_class, model_args, weights_path, paths_day, paths_night, layers, img_size=128):
         use_cuda = torch.cuda.is_available()
 
         model: (CustomModule, EmbeddingGenerator) = model_class(**model_args)
@@ -33,15 +33,25 @@ class EmbeddingDataset(Dataset):
             for filename in sorted(os.listdir(path)):
                 with open(os.path.join(path, filename), 'rb') as file:
                     img = Image.open(file)
-                    embedding = model.get_day_embeddings(transform(img))
-                    self.embeddings_day.append(embedding)
+                    embeddings = model.get_day_embeddings(transform(img).unsqueeze(0), layers)
+
+                    # remove batch dim
+                    for layer, embedding in embeddings.items():
+                        embeddings[layer] = embedding[0]
+
+                    self.embeddings_day.append(embeddings)
 
         for path in paths_night:
             for filename in sorted(os.listdir(path)):
                 with open(os.path.join(path, filename), 'rb') as file:
                     img = Image.open(file)
-                    embedding = model.get_night_embeddings(transform(img))
-                    self.embeddings_night.append(embedding)
+                    embeddings = model.get_night_embeddings(transform(img).unsqueeze(0), layers)
+
+                    # remove batch dim
+                    for layer, embedding in embeddings.items():
+                        embeddings[layer] = embedding[0]
+
+                    self.embeddings_night.append(embeddings)
 
         print('Done')
 

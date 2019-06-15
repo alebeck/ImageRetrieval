@@ -31,6 +31,9 @@ class SimpleModel(CustomModule, EmbeddingGenerator):
         self.scheduler_day = ReduceLROnPlateau(self.optimizer_day, patience=100, verbose=True)  # TODO patience in args
         self.scheduler_night = ReduceLROnPlateau(self.optimizer_night, patience=100, verbose=True)  # TODO patience in args
 
+    def __call__(self, input):
+        raise NotImplementedError # TODO
+
     def train_epoch(self, train_loader, epoch, use_cuda, log_path, **kwargs):
         loss_day_sum, loss_night_sum = 0, 0
 
@@ -119,17 +122,56 @@ class SimpleModel(CustomModule, EmbeddingGenerator):
         for name, img in samples.items():
             ToPILImage()(img.cpu()).save(os.path.join(log_path, f'{epoch}_{name}.jpeg'), 'JPEG')
 
-    def get_day_embeddings(self, img: torch.FloatTensor):
-        return {
-            'conv1': torch.randn(size=(8, 32)), # TODO test with two spatial dims
-            'conv2': torch.randn(size=(16, 8))
-        }
+    def register_hooks(self, layers): # TODO!! put this and the next method in context manager
+        """
+        This function is not supposed to be called from outside the class.
+        """
+        handles = []
+        embedding_dict = {}
 
-    def get_night_embeddings(self, img: torch.FloatTensor):
-        return {
-            'conv1': torch.randn(size=(8, 32)),  # TODO test with two spatial dims
-            'conv2': torch.randn(size=(16, 8))
-        }
+        def get_hook(name, embedding_dict):
+            def hook(model, input, output):
+                embedding_dict[name] = output.detach()
+            return hook
+
+        for layer in layers:
+            hook = get_hook(layer, embedding_dict)
+            handles.append(getattr(self.ae_day.encoder_upper, layer).register_forward_hook(hook))
+
+        return handles, embedding_dict
+
+    def deregister_hooks(self, handles):
+        """
+        This function is not supposed to be called from outside the class.
+        """
+        for handle in handles:
+            handle.remove()
+
+    def get_day_embeddings(self, img, layers):
+        """
+        Returns deep embeddings for the passed layers inside the upper encoder.
+        """
+        handles, embedding_dict = self.register_hooks(layers)
+
+        # forward pass
+        self.ae_day.encode(img)
+
+        self.deregister_hooks(handles)
+
+        return embedding_dict
+
+    def get_night_embeddings(self, img, layers):
+        """
+        Returns deep embeddings for the passed layers inside the upper encoder.
+        """
+        handles, embedding_dict = self.register_hooks(layers)
+
+        # forward pass
+        self.ae_night.encode(img)
+
+        self.deregister_hooks(handles)
+
+        return embedding_dict
 
     def train(self):
         self.ae_day.train()

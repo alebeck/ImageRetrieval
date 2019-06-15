@@ -9,6 +9,10 @@ class CustomModule:
     """
 
     @abstractmethod
+    def __call__(self, input):
+        raise NotImplementedError
+
+    @abstractmethod
     def train_epoch(self, train_loader, epoch, use_cuda, log_path, **kwargs):
         raise NotImplementedError
 
@@ -43,9 +47,9 @@ class EmbeddingGenerator:
     """
 
     @abstractmethod
-    def get_day_embeddings(self, img: torch.FloatTensor):
+    def get_day_embeddings(self, img, layers: list):
         raise NotImplementedError
 
     @abstractmethod
-    def get_night_embeddings(self, img: torch.FloatTensor):
+    def get_night_embeddings(self, img, layers: list):
         raise NotImplementedError
