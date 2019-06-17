@@ -9,6 +9,13 @@ from models.encoder import LowerEncoder, UpperEncoder
 from models.autoencoder import Autoencoder
 
 
+def cycle(image, autoencoder1, autoencoder2):
+    intermediate_latent_1 = autoencoder1.encode(image)
+    intermediate_opposite = autoencoder2.decode(intermediate_latent_1)
+    intermediate_latent_2 = autoencoder2.encode(intermediate_opposite)
+    return autoencoder1.decode(intermediate_latent_2)
+
+
 class CycleModel(CustomModule):
     ae_day: Autoencoder
     ae_night: Autoencoder
@@ -40,11 +47,10 @@ class CycleModel(CustomModule):
             ######################
 
             self.optimizer.zero_grad()
+
             # send image through the cycle
-            intermediate_latent_1 = self.ae_day.encode(day_img)
-            intermediate_night = self.ae_night.decode(intermediate_latent_1)
-            intermediate_latent_2 = self.ae_night.encode(intermediate_night)
-            out_day = self.ae_day.decode(intermediate_latent_2)
+            out_day = cycle(day_img, self.ae_day, self.ae_night)
+
             # optimize
             loss_day2night2day = self.loss_fn(out_day, day_img)
             loss_day2night2day.backward()
@@ -54,11 +60,10 @@ class CycleModel(CustomModule):
             ########################
 
             self.optimizer.zero_grad()
+
             # send image through the cycle
-            intermediate_latent_1 = self.ae_night.encode(night_img)
-            intermediate_day = self.ae_day.decode(intermediate_latent_1)
-            intermediate_latent_2 = self.ae_day.encode(intermediate_day)
-            out_night = self.ae_night.decode(intermediate_latent_2)
+            out_night = cycle(night_img, self.ae_night, self.ae_day)
+
             # optimize
             loss_night2day2night = self.loss_fn(out_night, night_img)
             loss_night2day2night.backward()
@@ -86,7 +91,7 @@ class CycleModel(CustomModule):
         }
 
     def validate(self, val_loader, use_cuda, **kwargs):
-        loss_day_sum, loss_night_sum = 0, 0
+        loss_day2night2day_sum, loss_night2day2night_sum = 0, 0
         day_img, night_img, out_day, out_night = (None,) * 4
 
         with torch.no_grad():
@@ -94,27 +99,25 @@ class CycleModel(CustomModule):
                 if use_cuda:
                     day_img, night_img = day_img.cuda(), night_img.cuda()
 
-                # TODO implement properly
+                out_day = cycle(day_img, self.ae_day, self.ae_night)
+                loss_day2night2day = self.loss_fn(out_day, day_img)
 
-                out_day = self.ae_day(day_img)
-                loss_day = self.loss_fn(out_day, day_img)
+                out_night = cycle(night_img, self.ae_night, self.ae_day)
+                loss_night2day2night = self.loss_fn(out_night, night_img)
 
-                out_night = self.ae_night(night_img)
-                loss_night = self.loss_fn(out_night, night_img)
+                loss_day2night2day_sum += loss_day2night2day
+                loss_night2day2night_sum += loss_night2day2night
 
-                loss_day_sum += loss_day
-                loss_night_sum += loss_night
-
-        loss_day_mean = loss_day_sum / len(val_loader)
-        loss_night_mean = loss_night_sum / len(val_loader)
+        loss_day2night2day_mean = loss_day2night2day_sum / len(val_loader)
+        loss_night2day2night_mean = loss_night2day2night_sum / len(val_loader)
 
         # domain translation
         day_to_night = self.ae_night.decode(self.ae_day.encode(day_img[0].unsqueeze(0)))
         night_to_day = self.ae_day.decode(self.ae_night.encode(night_img[0].unsqueeze(0)))
 
         return {
-            'loss_day': loss_day_mean,
-            'loss_night': loss_night_mean,
+            'loss_day': loss_day2night2day_mean,
+            'loss_night': loss_night2day2night_mean,
             'sample': {
                 'day_img': day_img[0],
                 'night_img': night_img[0],
