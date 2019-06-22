@@ -3,7 +3,6 @@ import pickle
 from datetime import datetime
 
 import torch
-from torchvision.transforms import ToPILImage
 
 from utils.config import TrainingConfig
 from utils.data import DataSplitter
@@ -16,7 +15,8 @@ class Trainer:
         self.data = DataSplitter(
             dataset=config.dataset(**config.dataset_args),
             batch_size=config.batch_size,
-            val_size=config.val_size
+            val_size=config.val_size,
+            shuffle=False
         )
         self.model = config.model(**config.model_args)
 
@@ -42,13 +42,7 @@ class Trainer:
             self.model.train()
 
             # train model for one epoch
-            info = self.model.train_epoch(self.data.train_loader, epoch, use_cuda)
-
-            # log losses
-            log_str = f'[Epoch {epoch}] Train day loss: {info["loss_day"]} Train night loss: {info["loss_night"]}'
-            print(log_str)
-            with open(os.path.join(log_path, 'log.txt'), 'a+') as f:
-                f.write(log_str + '\n')
+            self.model.train_epoch(self.data.train_loader, epoch, use_cuda, log_path)
 
             ### VALIDATION STEP ###
 
@@ -56,17 +50,7 @@ class Trainer:
             self.model.eval()
 
             # validate model
-            info = self.model.validate(self.data.val_loader, use_cuda)
-
-            # log losses
-            log_str = f'[Epoch {epoch}] Val day loss: {info["loss_day"]} Val night loss: {info["loss_night"]}'
-            print(log_str)
-            with open(os.path.join(log_path, 'log.txt'), 'a+') as f:
-                f.write(log_str + '\n')
-
-            # save sample images
-            for name, img in info['sample'].items():
-                ToPILImage()(img.cpu()).save(os.path.join(log_path, f'{epoch}_{name}.jpeg'), 'JPEG')
+            self.model.validate(self.data.val_loader, epoch, use_cuda, log_path)
 
             # save model weights
             if epoch % self.config.save_every == 0:
