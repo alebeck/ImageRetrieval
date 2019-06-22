@@ -1,9 +1,11 @@
+import os
+
 import torch
 import torch.nn as nn
 from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
-from models.custom_module import CustomModule
+from models.abstract import CustomModule
 from models.decoder import Decoder
 from models.encoder import LowerEncoder, UpperEncoder
 from models.autoencoder import Autoencoder
@@ -27,9 +29,12 @@ class CycleModel(CustomModule):
         self.optimizer = Adam(parameters)  # TODO put args in config (lr, weight_decay)
 
         # initialize scheduler
-        self.scheduler = ReduceLROnPlateau(self.optimizer, patience=100, verbose=True)  # TODO patience in args
+        self.scheduler = ReduceLROnPlateau(self.optimizer, patience=15, verbose=True)  # TODO patience in args
 
-    def train_epoch(self, train_loader, epoch, use_cuda, **kwargs):
+    def __call__(self, input):
+        raise NotImplementedError  # TODO
+
+    def train_epoch(self, train_loader, epoch, use_cuda, log_path, **kwargs):
         loss_day2night2day_sum, loss_night2day2night_sum = 0, 0
 
         for day_img, night_img in train_loader:
@@ -57,19 +62,18 @@ class CycleModel(CustomModule):
 
         self.scheduler.step(loss_mean, epoch)
 
-        # return {'loss day -> night -> day': loss_day2night2day_mean, 'loss night -> day -> night: ': loss_night_mean}
-        # return {
-        #     'loss_day2night2day_mean': loss_day2night2day_mean,
-        #     'loss_night2day2night_mean': loss_night2day2night_mean
-        # }
-        return {
-            'loss_day': loss_day2night2day_mean,
-            'loss_night': loss_night2day2night_mean
-        }
+        # log losses
+        log_str = f'[Epoch {epoch}] ' \
+            f'Train loss day -> night -> day: {loss_day2night2day_mean} ' \
+            f'Train loss night -> day -> night: {loss_night2day2night_mean}'
+        print(log_str)
+        with open(os.path.join(log_path, 'log.txt'), 'a+') as f:
+            f.write(log_str + '\n')
 
-    def validate(self, val_loader, use_cuda, **kwargs):
+    def validate(self, val_loader, epoch, use_cuda, log_path, **kwargs):
         loss_day2night2day_sum, loss_night2day2night_sum = 0, 0
-        day_img, night_img, out_day, out_night = (None,) * 4
+        # TODO: use this for logging
+        # day_img, night_img, out_day, out_night = (None,) * 4
 
         with torch.no_grad():
             for day_img, night_img in val_loader:
@@ -85,21 +89,19 @@ class CycleModel(CustomModule):
         loss_night2day2night_mean = loss_night2day2night_sum / len(val_loader)
 
         # domain translation
-        day_to_night = self.ae_night.decode(self.ae_day.encode(day_img[0].unsqueeze(0)))
-        night_to_day = self.ae_day.decode(self.ae_night.encode(night_img[0].unsqueeze(0)))
+        # TODO: use this for logging
+        # day_to_night = self.ae_night.decode(self.ae_day.encode(day_img[0].unsqueeze(0)))
+        # night_to_day = self.ae_day.decode(self.ae_night.encode(night_img[0].unsqueeze(0)))
 
-        return {
-            'loss_day': loss_day2night2day_mean,
-            'loss_night': loss_night2day2night_mean,
-            'sample': {
-                'day_img': day_img[0],
-                'night_img': night_img[0],
-                'out_day': out_day[0],
-                'out_night': out_night[0],
-                'day_to_night': day_to_night[0],
-                'night_to_day': night_to_day[0]
-            }
-        }
+        # log losses
+        log_str = f'[Epoch {epoch}] ' \
+            f'Val loss day -> night -> day: {loss_day2night2day_mean} ' \
+            f'Val loss night -> day -> night: {loss_night2day2night_mean}'
+        print(log_str)
+        with open(os.path.join(log_path, 'log.txt'), 'a+') as f:
+            f.write(log_str + '\n')
+
+        # TODO: save sample images
 
     def cycle_plus_reconstruction_loss(self, image, autoencoder1, autoencoder2):
         # send the image through the cycle
@@ -135,3 +137,10 @@ class CycleModel(CustomModule):
             'decoder_day': self.ae_day.decoder.state_dict(),
             'decoder_night': self.ae_night.decoder.state_dict()
         }
+
+    def load_state_dict(self, state):
+        self.ae_day.encoder_lower.load_state_dict(state['encoder_lower_day'])
+        self.ae_night.encoder_lower.load_state_dict(state['encoder_lower_night'])
+        self.ae_day.encoder_upper.load_state_dict(state['encoder_upper'])
+        self.ae_day.decoder.load_state_dict(state['decoder_day'])
+        self.ae_night.decoder.load_state_dict(state['decoder_night'])
