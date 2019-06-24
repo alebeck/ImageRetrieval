@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torchvision.transforms import ToPILImage
 
 from models.abstract import CustomModule
 from models.decoder import Decoder
@@ -72,8 +73,7 @@ class CycleModel(CustomModule):
 
     def validate(self, val_loader, epoch, use_cuda, log_path, **kwargs):
         loss_day2night2day_sum, loss_night2day2night_sum = 0, 0
-        # TODO: use this for logging
-        # day_img, night_img, out_day, out_night = (None,) * 4
+        day_img, night_img = None, None
 
         with torch.no_grad():
             for day_img, night_img in val_loader:
@@ -88,11 +88,6 @@ class CycleModel(CustomModule):
         loss_day2night2day_mean = loss_day2night2day_sum / len(val_loader)
         loss_night2day2night_mean = loss_night2day2night_sum / len(val_loader)
 
-        # domain translation
-        # TODO: use this for logging
-        # day_to_night = self.ae_night.decode(self.ae_day.encode(day_img[0].unsqueeze(0)))
-        # night_to_day = self.ae_day.decode(self.ae_night.encode(night_img[0].unsqueeze(0)))
-
         # log losses
         log_str = f'[Epoch {epoch}] ' \
             f'Val loss day -> night -> day: {loss_day2night2day_mean} ' \
@@ -101,7 +96,34 @@ class CycleModel(CustomModule):
         with open(os.path.join(log_path, 'log.txt'), 'a+') as f:
             f.write(log_str + '\n')
 
-        # TODO: save sample images
+        # create sample images
+
+        latent_day = self.ae_day.encode(day_img[0].unsqueeze(0))
+        latent_night = self.ae_night.encode(night_img[0].unsqueeze(0))
+        # reconstruction
+        day2day = self.ae_day.decode(latent_day)
+        night2night = self.ae_night.decode(latent_night)
+        # domain translation
+        day2night = self.ae_night.decode(latent_day)
+        night2day = self.ae_day.decode(latent_night)
+        # cycle
+        day2night2day = self.ae_day.decode(self.ae_night.encode(day2night))
+        night2day2night = self.ae_night.decode(self.ae_day.encode(night2day))
+
+        # save sample images
+        samples = {
+            'day_img': day_img[0],
+            'night_img': night_img[0],
+            'day2day': day2day[0],
+            'night2night': night2night[0],
+            'day2night': day2night[0],
+            'night2day': night2day[0],
+            'day2night2day': day2night2day[0],
+            'night2day2night': night2day2night[0],
+        }
+
+        for name, img in samples.items():
+            ToPILImage()(img.cpu()).save(os.path.join(log_path, f'{epoch}_{name}.jpeg'), 'JPEG')
 
     def cycle_plus_reconstruction_loss(self, image, autoencoder1, autoencoder2):
         # send the image through the cycle
