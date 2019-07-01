@@ -36,8 +36,11 @@ class UpperEncoder(nn.Module):
         super().__init__()
 
         self.conv2_2 = nn.Conv2d(64, 128, 3, padding=1)
+        self.relu2_2 = nn.ReLU()
         self.conv2_3 = nn.Conv2d(128, 128, 3, padding=1)
+        self.relu2_3 = nn.ReLU()
         self.conv2_4 = nn.Conv2d(128, 256, 3, padding=1)
+        self.relu2_4 = nn.ReLU()
         self.pool2 = nn.MaxPool2d(2, stride=2)
 
         self.conv3_1 = nn.Conv2d(256, 256, 3, padding=1)
@@ -49,9 +52,9 @@ class UpperEncoder(nn.Module):
         self.pool3 = nn.MaxPool2d(2, stride=2)
 
     def forward(self, x):
-        x = f.relu(self.conv2_2(x))
-        x = f.relu(self.conv2_3(x))
-        x = f.relu(self.conv2_4(x))
+        x = self.relu2_2(self.conv2_2(x))
+        x = self.relu2_3(self.conv2_3(x))
+        x = self.relu2_4(self.conv2_4(x))
         x = self.pool2(x)
 
         x = self.relu3_1(self.conv3_1(x))
