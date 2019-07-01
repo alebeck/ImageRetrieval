@@ -6,9 +6,10 @@ from utils.trainer import Trainer
 
 # DFM layers and number of channels per layer
 layers = {
-    'conv3_1': 256,
+    #'conv3_1': 256,
     'conv3_2': 512,
-    'conv3_3': 512
+    'conv3_3': 512,
+    'pool3': 512
 }
 
 config = TrainingConfig(
@@ -28,7 +29,7 @@ config = TrainingConfig(
     model=FeatureWeight,
     model_args={ 'layers': layers },
     batch_size=16,
-    epochs=1000,
+    epochs=10000,
     val_size=0.2,
     log_path='log_triplet',
     save_every=100

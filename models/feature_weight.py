@@ -1,13 +1,13 @@
+import os
+
 import torch
 from torch.optim import Adam
 
 from models.abstract import CustomModule
+from utils.functions import select_triplets
 
 
 class FeatureWeight(CustomModule):
-
-    def __call__(self, input):
-        raise NotImplementedError #TODO
 
     def __init__(self, layers: dict, margin:float = 1.0):
         """
@@ -22,6 +22,9 @@ class FeatureWeight(CustomModule):
 
         self.optimizer = Adam(self.weights.values())
 
+    def __call__(self, input):
+        raise NotImplementedError #TODO
+
     def calculate_loss(self, a, p, n):
         # weight channels of a, p and n
         ap_dist_sum, an_dist_sum = torch.tensor(0).float(), torch.tensor(0).float()
@@ -29,9 +32,6 @@ class FeatureWeight(CustomModule):
             assert a[layer].shape[1] == p[layer].shape[1] == n[layer].shape[1] == self.layers[layer]
 
             B, C = a[layer].shape[:2]
-
-            # normalize activations in channel dim
-            # TODO
 
             # weight activations
             a_weighted = a[layer].view(B, C, -1) * self.weights[layer]
@@ -52,13 +52,13 @@ class FeatureWeight(CustomModule):
     def train_epoch(self, train_loader, epoch, use_cuda, log_path, **kwargs):
         loss_sum = 0
 
-        for a, p, n in train_loader:
+        for embeddings_day, embeddings_night in train_loader:
             if use_cuda:
-                a, p, n = a.cuda(), p.cuda(), n.cuda()
+                embeddings_day, embeddings_night = embeddings_day.cuda(), embeddings_night.cuda()
 
             self.optimizer.zero_grad()
 
-            loss = self.calculate_loss(a, p, n)
+            loss = self.calculate_loss(*select_triplets(embeddings_day, embeddings_night))
             loss.requires_grad_().backward()
 
             self.optimizer.step()
@@ -67,21 +67,27 @@ class FeatureWeight(CustomModule):
 
         loss_mean = loss_sum / len(train_loader)
 
-        print(f'Train loss: {loss_mean}')
+        log_str = f'[Epoch {epoch}] Train loss: {loss_mean}'
+        print(log_str)
+        with open(os.path.join(log_path, 'log.txt'), 'a+') as f:
+            f.write(log_str + '\n')
 
     def validate(self, val_loader, epoch, use_cuda, log_path, **kwargs):
         loss_sum = 0
 
-        for a, p, n in val_loader:
+        for embeddings_day, embeddings_night in val_loader:
             if use_cuda:
-                a, p, n = a.cuda(), p.cuda(), n.cuda()
+                embeddings_day, embeddings_night = embeddings_day.cuda(), embeddings_night.cuda()
 
-            loss = self.calculate_loss(a, p, n)
+            loss = self.calculate_loss(*select_triplets(embeddings_day, embeddings_night))
             loss_sum += loss
 
         loss_mean = loss_sum / len(val_loader)
 
-        print(f'Val loss: {loss_mean}')
+        log_str = f'[Epoch {epoch}] Val loss: {loss_mean}'
+        print(log_str)
+        with open(os.path.join(log_path, 'log.txt'), 'a+') as f:
+            f.write(log_str + '\n')
 
     def train(self):
         pass
@@ -93,7 +99,7 @@ class FeatureWeight(CustomModule):
         self.weights = self.weights.cuda()
 
     def state_dict(self):
-        pass
+        return self.weights
 
     def load_state_dict(self, state_dict):
-        pass
+        self.weights = state_dict

@@ -41,6 +41,7 @@ class UpperEncoder(nn.Module):
         self.pool2 = nn.MaxPool2d(2, stride=2)
 
         self.conv3_1 = nn.Conv2d(256, 256, 3, padding=1)
+        #self.relu3_1 = ... # TODO
         self.conv3_2 = nn.Conv2d(256, 512, 3, padding=1)
         self.conv3_3 = nn.Conv2d(512, 512, 3, padding=1)
         self.pool3 = nn.MaxPool2d(2, stride=2)
