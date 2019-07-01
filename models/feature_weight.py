@@ -108,8 +108,10 @@ class FeatureWeight(CustomModule):
         pass
 
     def cuda(self):
-        for layer in self.layers:
-            self.weights[layer] = self.weights[layer].cuda()
+        self.weights = {
+            layer: torch.ones(size=(1, size), device='cuda').float().t().requires_grad_() for layer, size in self.layers.items()
+        }
+        self.optimizer = Adam(self.weights.values())
 
     def state_dict(self):
         return self.weights
