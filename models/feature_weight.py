@@ -96,7 +96,8 @@ class FeatureWeight(CustomModule):
         pass
 
     def cuda(self):
-        self.weights = self.weights.cuda()
+        for layer in self.layers:
+            self.weights[layer] = self.weights[layer].cuda()
 
     def state_dict(self):
         return self.weights
