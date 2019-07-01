@@ -54,7 +54,8 @@ class FeatureWeight(CustomModule):
 
         for embeddings_day, embeddings_night in train_loader:
             if use_cuda:
-                embeddings_day, embeddings_night = embeddings_day.cuda(), embeddings_night.cuda()
+                for layer in self.layers:
+                    embeddings_day[layer], embeddings_night[layer] = embeddings_day[layer].cuda(), embeddings_night[layer].cuda()
 
             self.optimizer.zero_grad()
 
