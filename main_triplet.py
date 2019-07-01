@@ -6,9 +6,9 @@ from utils.trainer import Trainer
 
 # DFM layers and number of channels per layer
 layers = {
-    #'conv3_1': 256,
-    'conv3_2': 512,
-    'conv3_3': 512,
+    'relu3_1': 256,
+    'relu3_2': 512,
+    'relu3_3': 512,
     'pool3': 512
 }
 

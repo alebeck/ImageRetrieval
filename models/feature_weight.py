@@ -9,7 +9,7 @@ from utils.functions import select_triplets
 
 class FeatureWeight(CustomModule):
 
-    def __init__(self, layers: dict, margin:float = 1.0):
+    def __init__(self, layers: dict, margin: float = 1.0):
         """
         :param layers: Layers to use and their number of channels, e.g. {'conv1': 512, 'conv2': 256}
         """
@@ -23,11 +23,15 @@ class FeatureWeight(CustomModule):
         self.optimizer = Adam(self.weights.values())
 
     def __call__(self, input):
-        raise NotImplementedError #TODO
+        raise NotImplementedError  # TODO
 
-    def calculate_loss(self, a, p, n):
+    def calculate_loss(self, a, p, n, use_cuda):
         # weight channels of a, p and n
         ap_dist_sum, an_dist_sum = torch.tensor(0).float(), torch.tensor(0).float()
+
+        if use_cuda:
+            ap_dist_sum, an_dist_sum = ap_dist_sum.cuda(), an_dist_sum.cuda()
+
         for layer, size in self.layers.items():
             assert a[layer].shape[1] == p[layer].shape[1] == n[layer].shape[1] == self.layers[layer]
 
@@ -47,7 +51,11 @@ class FeatureWeight(CustomModule):
         an_dist = an_dist_sum / len(self.layers)
 
         # triplet loss
-        return torch.max(ap_dist - an_dist + self.margin, torch.tensor(0.).float())
+        zero = torch.tensor(0.).float()
+        if use_cuda:
+            zero = zero.cuda()
+
+        return torch.max(ap_dist - an_dist + self.margin, zero)
 
     def train_epoch(self, train_loader, epoch, use_cuda, log_path, **kwargs):
         loss_sum = 0
@@ -55,11 +63,12 @@ class FeatureWeight(CustomModule):
         for embeddings_day, embeddings_night in train_loader:
             if use_cuda:
                 for layer in self.layers:
-                    embeddings_day[layer], embeddings_night[layer] = embeddings_day[layer].cuda(), embeddings_night[layer].cuda()
+                    embeddings_day[layer], embeddings_night[layer] = embeddings_day[layer].cuda(), embeddings_night[
+                        layer].cuda()
 
             self.optimizer.zero_grad()
 
-            loss = self.calculate_loss(*select_triplets(embeddings_day, embeddings_night))
+            loss = self.calculate_loss(*select_triplets(embeddings_day, embeddings_night), use_cuda)
             loss.requires_grad_().backward()
 
             self.optimizer.step()
@@ -78,9 +87,11 @@ class FeatureWeight(CustomModule):
 
         for embeddings_day, embeddings_night in val_loader:
             if use_cuda:
-                embeddings_day, embeddings_night = embeddings_day.cuda(), embeddings_night.cuda()
+                for layer in self.layers:
+                    embeddings_day[layer], embeddings_night[layer] = embeddings_day[layer].cuda(), embeddings_night[
+                        layer].cuda()
 
-            loss = self.calculate_loss(*select_triplets(embeddings_day, embeddings_night))
+            loss = self.calculate_loss(*select_triplets(embeddings_day, embeddings_night), use_cuda)
             loss_sum += loss
 
         loss_mean = loss_sum / len(val_loader)
