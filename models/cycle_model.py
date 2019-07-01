@@ -21,7 +21,7 @@ class CycleModel(CustomModule):
         encoder_upper = UpperEncoder()
         self.ae_day = Autoencoder(LowerEncoder(), encoder_upper, Decoder())
         self.ae_night = Autoencoder(LowerEncoder(), encoder_upper, Decoder())
-        self.loss_fn = nn.L1Loss()  # TODO Which loss?
+        self.loss_fn = nn.L1Loss()
 
         # TODO is there a nicer way to write this?
         parameters = set()
@@ -36,7 +36,7 @@ class CycleModel(CustomModule):
         raise NotImplementedError  # TODO
 
     def train_epoch(self, train_loader, epoch, use_cuda, log_path, **kwargs):
-        loss_day2night2day_sum, loss_night2day2night_sum = 0, 0
+        loss_day2night2day_sum, loss_night2day2night_sum, loss_day2day_sum, loss_night2night_sum = 0, 0, 0, 0
 
         for day_img, night_img in train_loader:
             if use_cuda:
@@ -44,35 +44,42 @@ class CycleModel(CustomModule):
 
             # Day -> Night -> Day
             self.optimizer.zero_grad()
-            loss_day2night2day = self.cycle_plus_reconstruction_loss(day_img, self.ae_day, self.ae_night)
-            loss_day2night2day.backward()
+            loss_day2night2day, loss_day2day = self.cycle_plus_reconstruction_loss(day_img, self.ae_day, self.ae_night)
+            (loss_day2night2day + loss_day2day).backward()
             self.optimizer.step()
 
             # Night -> Day -> Night
             self.optimizer.zero_grad()
-            loss_night2day2night = self.cycle_plus_reconstruction_loss(night_img, self.ae_night, self.ae_day)
-            loss_night2day2night.backward()
+            loss_night2day2night, loss_night2night \
+                = self.cycle_plus_reconstruction_loss(night_img, self.ae_night, self.ae_day)
+            (loss_night2day2night + loss_night2night).backward()
             self.optimizer.step()
 
             loss_day2night2day_sum += loss_day2night2day
+            loss_day2day_sum += loss_day2day
             loss_night2day2night_sum += loss_night2day2night
+            loss_night2night_sum += loss_night2night
 
         loss_day2night2day_mean = loss_day2night2day_sum / len(train_loader)
+        loss_day2day_mean = loss_day2day_sum / len(train_loader)
         loss_night2day2night_mean = loss_night2day2night_sum / len(train_loader)
-        loss_mean = (loss_day2night2day_mean + loss_night2day2night_mean) / 2
+        loss_night2night_mean = loss_night2night_sum / len(train_loader)
+        loss_mean = (loss_day2night2day_mean + loss_day2day_mean + loss_night2day2night_mean + loss_night2night_mean)/4
 
         self.scheduler.step(loss_mean, epoch)
 
         # log losses
         log_str = f'[Epoch {epoch}] ' \
             f'Train loss day -> night -> day: {loss_day2night2day_mean} ' \
-            f'Train loss night -> day -> night: {loss_night2day2night_mean}'
+            f'Train loss night -> day -> night: {loss_night2day2night_mean} ' \
+            f'Train loss day -> day: {loss_day2day_mean} ' \
+            f'Train loss night -> night: {loss_night2night_mean}'
         print(log_str)
         with open(os.path.join(log_path, 'log.txt'), 'a+') as f:
             f.write(log_str + '\n')
 
     def validate(self, val_loader, epoch, use_cuda, log_path, **kwargs):
-        loss_day2night2day_sum, loss_night2day2night_sum = 0, 0
+        loss_day2night2day_sum, loss_night2day2night_sum, loss_day2day_sum, loss_night2night_sum = 0, 0, 0, 0
         day_img, night_img = None, None
 
         with torch.no_grad():
@@ -80,18 +87,30 @@ class CycleModel(CustomModule):
                 if use_cuda:
                     day_img, night_img = day_img.cuda(), night_img.cuda()
 
-                # Day -> Night -> Day
-                loss_day2night2day_sum += self.cycle_plus_reconstruction_loss(day_img, self.ae_day, self.ae_night)
-                # Night -> Day -> Night
-                loss_night2day2night_sum += self.cycle_plus_reconstruction_loss(night_img, self.ae_night, self.ae_day)
+                # Day -> Night -> Day  and  Day -> Day
+                loss_day2night2day, loss_day2day = \
+                    self.cycle_plus_reconstruction_loss(day_img, self.ae_day, self.ae_night)
+
+                # Night -> Day -> Night  and  Night -> Night
+                loss_night2day2night, loss_night2night = \
+                    self.cycle_plus_reconstruction_loss(night_img, self.ae_night, self.ae_day)
+
+                loss_day2night2day_sum += loss_day2night2day
+                loss_day2day_sum += loss_day2day
+                loss_night2day2night_sum += loss_night2day2night
+                loss_night2night_sum += loss_night2night
 
         loss_day2night2day_mean = loss_day2night2day_sum / len(val_loader)
         loss_night2day2night_mean = loss_night2day2night_sum / len(val_loader)
+        loss_day2day_mean = loss_day2day_sum / len(val_loader)
+        loss_night2night_mean = loss_night2night_sum / len(val_loader)
 
         # log losses
         log_str = f'[Epoch {epoch}] ' \
             f'Val loss day -> night -> day: {loss_day2night2day_mean} ' \
-            f'Val loss night -> day -> night: {loss_night2day2night_mean}'
+            f'Val loss night -> day -> night: {loss_night2day2night_mean} ' \
+            f'Val loss day -> day: {loss_day2day_mean} ' \
+            f'Val loss night -> night: {loss_night2night_mean}'
         print(log_str)
         with open(os.path.join(log_path, 'log.txt'), 'a+') as f:
             f.write(log_str + '\n')
@@ -137,7 +156,7 @@ class CycleModel(CustomModule):
 
         cycle_loss = self.loss_fn(cycle_img, image)
         reconstruction_loss = self.loss_fn(reconstructed_img, image)
-        return cycle_loss + reconstruction_loss
+        return cycle_loss, reconstruction_loss
 
     def train(self):
         self.ae_day.train()
