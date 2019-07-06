@@ -21,9 +21,12 @@ config = TrainingConfig(
         ],
     },
     model=CycleModel,
-    model_args={},
+    model_args={
+        'reconstruction_loss_factor': 1.,
+        'cycle_loss_factor': 1.,
+    },
     batch_size=64,
-    epochs=10,
+    epochs=60,
     val_size=0.2,
     log_path='log',
     save_every=100
@@ -33,4 +36,10 @@ trainer = Trainer(config)
 
 print(f'{len(trainer.data.train_loader)} batches')
 
+# step 1: train with reconstruction loss
+trainer.train()
+
+# step 2: train with cycle loss
+trainer.model.reconstruction_loss_factor = 0.
+trainer.model.cycle_loss_factor = 1.
 trainer.train()

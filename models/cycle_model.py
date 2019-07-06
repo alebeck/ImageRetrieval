@@ -15,13 +15,17 @@ from models.autoencoder import Autoencoder
 class CycleModel(CustomModule):
     ae_day: Autoencoder
     ae_night: Autoencoder
+    reconstruction_loss_factor: float
+    cycle_loss_factor: float
 
-    def __init__(self):
+    def __init__(self, reconstruction_loss_factor: float, cycle_loss_factor: float):
         # share weights of the upper encoder stage
         encoder_upper = UpperEncoder()
         self.ae_day = Autoencoder(LowerEncoder(), encoder_upper, Decoder())
         self.ae_night = Autoencoder(LowerEncoder(), encoder_upper, Decoder())
         self.loss_fn = nn.L1Loss()
+        self.reconstruction_loss_factor = reconstruction_loss_factor
+        self.cycle_loss_factor = cycle_loss_factor
 
         # TODO is there a nicer way to write this?
         parameters = set()
@@ -45,14 +49,16 @@ class CycleModel(CustomModule):
             # Day -> Night -> Day
             self.optimizer.zero_grad()
             loss_day2night2day, loss_day2day = self.cycle_plus_reconstruction_loss(day_img, self.ae_day, self.ae_night)
-            (loss_day2night2day + loss_day2day).backward()
+            loss = loss_day2night2day * self.cycle_loss_factor + loss_day2day * self.reconstruction_loss_factor
+            loss.backward()
             self.optimizer.step()
 
             # Night -> Day -> Night
             self.optimizer.zero_grad()
             loss_night2day2night, loss_night2night \
                 = self.cycle_plus_reconstruction_loss(night_img, self.ae_night, self.ae_day)
-            (loss_night2day2night + loss_night2night).backward()
+            loss = loss_night2day2night * self.cycle_loss_factor + loss_night2night * self.reconstruction_loss_factor
+            loss.backward()
             self.optimizer.step()
 
             loss_day2night2day_sum += loss_day2night2day
