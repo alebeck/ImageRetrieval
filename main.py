@@ -1,3 +1,5 @@
+from torchvision.transforms import ToTensor, Resize, Compose, CenterCrop
+
 from datasets.day_night import DayNightDataset
 from models.simple_model import SimpleModel
 from utils.config import TrainingConfig
@@ -7,22 +9,17 @@ from utils.trainer import Trainer
 config = TrainingConfig(
     dataset=DayNightDataset,
     dataset_args={
-        'paths_day': [
-            'data/sun/right',
-            'data/sun/left',
-            'data/overcast-summer/right',
-            'data/overcast-summer/left',
-        ],
-        'paths_night': [
-            'data/night/right',
-            'data/night/left',
-            'data/night-rain/right',
-            'data/night-rain/left',
-        ],
+        'paths_day': [],
+        'paths_night': [],
+        'transform': Compose([
+            CenterCrop(760),
+            Resize(128),
+            ToTensor()
+        ])
     },
     model=SimpleModel,
     model_args={},
-    batch_size=64,
+    batch_size=1,
     epochs=10,
     val_size=0.2,
     log_path='log',

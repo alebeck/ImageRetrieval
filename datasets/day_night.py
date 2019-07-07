@@ -1,19 +1,17 @@
 import os
 
 from torch.utils.data import Dataset
-from torchvision.transforms import ToTensor, Resize, Compose
+from torchvision.transforms import ToTensor
 from PIL import Image
 
 
 class DayNightDataset(Dataset):
 
-    def __init__(self, paths_day, paths_night, img_size=128):
+    def __init__(self, paths_day, paths_night, transform=None):
         self.images_day, self.images_night = [], []
 
-        transform = Compose([
-            Resize(img_size),
-            ToTensor()
-        ])
+        if transform is None:
+            transform = ToTensor()
 
         print("Loading data...")
 
