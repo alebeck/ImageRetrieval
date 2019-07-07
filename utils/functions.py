@@ -30,4 +30,4 @@ def unit_normalize(x, dim=0):
     :param dim:
     :return:
     """
-    return (x - x.mean(dim=dim)) / x.std(dim=dim)
+    return (x - x.mean(dim=dim)) / (x.std(dim=dim) + torch.tensor(1e-8).float())
