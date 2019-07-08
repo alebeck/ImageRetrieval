@@ -20,6 +20,10 @@ class Trainer:
         )
         self.model = config.model(**config.model_args)
 
+        if self.config.weights_path is not None:
+            print('Resuming training from snapshot...')
+            self.model.load_state_dict(torch.load(self.config.weights_path))
+
     def train(self):
         log_path = os.path.join(self.config.log_path, str(datetime.now()))
         if not os.path.exists(log_path):

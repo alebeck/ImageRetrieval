@@ -11,6 +11,7 @@ class TrainingConfig:
     dataset_args: dict
     model: Type[CustomModule]
     model_args: dict
+    weights_path: str
     batch_size: int
     epochs: int
     val_size: float

@@ -24,8 +24,8 @@ class SimpleModel(CustomModule, EmbeddingGenerator):
         self.ae_night = Autoencoder(LowerEncoder(), encoder_upper, Decoder())
         self.loss_fn = nn.L1Loss()  # TODO Which loss?
 
-        self.optimizer_day = Adam(self.ae_day.parameters())  # TODO put args in config (lr, weight_decay)
-        self.optimizer_night = Adam(self.ae_night.parameters())  # TODO put args in config (lr, weight_decay)
+        self.optimizer_day = Adam(self.ae_day.parameters(), lr=1e-4)  # TODO put args in config (lr, weight_decay)
+        self.optimizer_night = Adam(self.ae_night.parameters(), lr=1e-4)  # TODO put args in config (lr, weight_decay)
 
         # initialize scheduler
         self.scheduler_day = ReduceLROnPlateau(self.optimizer_day, patience=15, verbose=True)  # TODO patience in args
@@ -191,7 +191,9 @@ class SimpleModel(CustomModule, EmbeddingGenerator):
             'encoder_lower_night': self.ae_night.encoder_lower.state_dict(),
             'encoder_upper': self.ae_day.encoder_upper.state_dict(),
             'decoder_day': self.ae_day.decoder.state_dict(),
-            'decoder_night': self.ae_night.decoder.state_dict()
+            'decoder_night': self.ae_night.decoder.state_dict(),
+            'optimizer_day': self.optimizer_day.state_dict(),
+            'optimizer_night': self.optimizer_night.state_dict()
         }
 
     def load_state_dict(self, state):
@@ -200,3 +202,7 @@ class SimpleModel(CustomModule, EmbeddingGenerator):
         self.ae_day.encoder_upper.load_state_dict(state['encoder_upper'])
         self.ae_day.decoder.load_state_dict(state['decoder_day'])
         self.ae_night.decoder.load_state_dict(state['decoder_night'])
+
+        if 'optimizer_day' in state and 'optimizer_night' in state:
+            self.optimizer_day.load_state_dict(state['optimizer_day'])
+            self.optimizer_night.load_state_dict(state['optimizer_night'])
