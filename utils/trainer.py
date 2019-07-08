@@ -74,4 +74,4 @@ class Trainer:
                     'optimizer': self.model.optim_state_dict(),
                     'epoch': epoch + 1
                 }
-                torch.save(checkpoint, os.path.join(log_path, f'{epoch}_weights.pt'))
+                torch.save(checkpoint, os.path.join(log_path, f'{epoch}_checkpoint.pt'))
