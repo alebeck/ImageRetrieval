@@ -18,6 +18,7 @@ config = TrainingConfig(
         ])
     },
     model=SimpleModel,
+    checkpoint_path=None,
     model_args={},
     batch_size=1,
     epochs=10,

@@ -20,6 +20,7 @@ class Trainer:
         )
         self.model = config.model(**config.model_args)
         self.epoch_start = 0
+        self.checkpoint = None
 
         # load checkpoint
         if self.config.checkpoint_path is not None:
