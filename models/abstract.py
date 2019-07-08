@@ -13,6 +13,14 @@ class CustomModule:
         raise NotImplementedError
 
     @abstractmethod
+    def init_optimizers(self):
+        """
+        Is called right before training and after model has been moved to GPU.
+        Supposed to initialize optimizers and schedulers.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def train_epoch(self, train_loader, epoch, use_cuda, log_path, **kwargs):
         raise NotImplementedError
 
@@ -37,7 +45,15 @@ class CustomModule:
         raise NotImplementedError
 
     @abstractmethod
+    def optim_state_dict(self):
+        raise NotImplementedError
+
+    @abstractmethod
     def load_state_dict(self, state_dict):
+        raise NotImplementedError
+
+    @abstractmethod
+    def load_optim_state_dict(self, state_dict):
         raise NotImplementedError
 
 

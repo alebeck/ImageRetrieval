@@ -11,12 +11,12 @@ class TrainingConfig:
     dataset_args: dict
     model: Type[CustomModule]
     model_args: dict
-    weights_path: str
+    checkpoint_path: str # None if not resuming training
     batch_size: int
     epochs: int
     val_size: float
     log_path: str
-    save_every: int  # save model every save_every epochs
+    save_every: int  # save checkpoint every save_every epochs
 
 
 @dataclass

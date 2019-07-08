@@ -24,15 +24,23 @@ class SimpleModel(CustomModule, EmbeddingGenerator):
         self.ae_night = Autoencoder(LowerEncoder(), encoder_upper, Decoder())
         self.loss_fn = nn.L1Loss()  # TODO Which loss?
 
-        self.optimizer_day = Adam(self.ae_day.parameters(), lr=1e-4)  # TODO put args in config (lr, weight_decay)
-        self.optimizer_night = Adam(self.ae_night.parameters(), lr=1e-4)  # TODO put args in config (lr, weight_decay)
-
-        # initialize scheduler
-        self.scheduler_day = ReduceLROnPlateau(self.optimizer_day, patience=15, verbose=True)  # TODO patience in args
-        self.scheduler_night = ReduceLROnPlateau(self.optimizer_night, patience=15, verbose=True)  # TODO patience in args
+        self.optimizer_day = None
+        self.optimizer_night = None
+        self.scheduler_day = None
+        self.scheduler_night = None
 
     def __call__(self, input):
         raise NotImplementedError # TODO
+
+    def init_optimizers(self):
+        """
+        Is called right before training and after model has been moved to GPU.
+        Supposed to initialize optimizers and schedulers.
+        """
+        self.optimizer_day = Adam(self.ae_day.parameters(), lr=1e-4)  # TODO put args in config (lr, weight_decay)
+        self.optimizer_night = Adam(self.ae_night.parameters(), lr=1e-4)  # TODO put args in config (lr, weight_decay)
+        self.scheduler_day = ReduceLROnPlateau(self.optimizer_day, patience=15, verbose=True)  # TODO patience in args
+        self.scheduler_night = ReduceLROnPlateau(self.optimizer_night, patience=15, verbose=True)  # TODO patience in args
 
     def train_epoch(self, train_loader, epoch, use_cuda, log_path, **kwargs):
         loss_day_sum, loss_night_sum = 0, 0
@@ -191,7 +199,11 @@ class SimpleModel(CustomModule, EmbeddingGenerator):
             'encoder_lower_night': self.ae_night.encoder_lower.state_dict(),
             'encoder_upper': self.ae_day.encoder_upper.state_dict(),
             'decoder_day': self.ae_day.decoder.state_dict(),
-            'decoder_night': self.ae_night.decoder.state_dict(),
+            'decoder_night': self.ae_night.decoder.state_dict()
+        }
+
+    def optim_state_dict(self):
+        return {
             'optimizer_day': self.optimizer_day.state_dict(),
             'optimizer_night': self.optimizer_night.state_dict()
         }
@@ -203,6 +215,6 @@ class SimpleModel(CustomModule, EmbeddingGenerator):
         self.ae_day.decoder.load_state_dict(state['decoder_day'])
         self.ae_night.decoder.load_state_dict(state['decoder_night'])
 
-        if 'optimizer_day' in state and 'optimizer_night' in state:
-            self.optimizer_day.load_state_dict(state['optimizer_day'])
-            self.optimizer_night.load_state_dict(state['optimizer_night'])
+    def load_optim_state_dict(self, state):
+        self.optimizer_day.load_state_dict(state['optimizer_day'])
+        self.optimizer_night.load_state_dict(state['optimizer_night'])

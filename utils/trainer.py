@@ -19,10 +19,26 @@ class Trainer:
             shuffle=False
         )
         self.model = config.model(**config.model_args)
+        self.epoch_start = 0
 
-        if self.config.weights_path is not None:
-            print('Resuming training from snapshot...')
-            self.model.load_state_dict(torch.load(self.config.weights_path))
+        # load checkpoint
+        if self.config.checkpoint_path is not None:
+            print('Resuming training from checkpoint...')
+            self.checkpoint = torch.load(self.config.checkpoint_path)
+            self.model.load_state_dict(self.checkpoint['model'])
+            self.epoch_start = self.checkpoint['epoch']
+
+        # check cuda availability
+        self.use_cuda = torch.cuda.is_available()
+        if self.use_cuda:
+            print('Using GPU...')
+            self.model.cuda()
+
+        self.model.init_optimizers()
+
+        # resume optimizer state
+        if self.checkpoint is not None:
+            self.model.load_optim_state_dict(self.checkpoint['optimizer'])
 
     def train(self):
         log_path = os.path.join(self.config.log_path, str(datetime.now()))
@@ -33,20 +49,14 @@ class Trainer:
         with open(os.path.join(log_path, 'config.pickle'), 'wb+') as f:
             pickle.dump(self.config, f)
 
-        # check cuda availability
-        use_cuda = torch.cuda.is_available()
-        if use_cuda:
-            print('Using GPU...')
-            self.model.cuda()
-
-        for epoch in range(self.config.epochs):
+        for epoch in range(self.epoch_start, self.config.epochs):
             ### TRAINING STEP ###
 
             # set model to train mode
             self.model.train()
 
             # train model for one epoch
-            self.model.train_epoch(self.data.train_loader, epoch, use_cuda, log_path)
+            self.model.train_epoch(self.data.train_loader, epoch, self.use_cuda, log_path)
 
             ### VALIDATION STEP ###
 
@@ -54,8 +64,13 @@ class Trainer:
             self.model.eval()
 
             # validate model
-            self.model.validate(self.data.val_loader, epoch, use_cuda, log_path)
+            self.model.validate(self.data.val_loader, epoch, self.use_cuda, log_path)
 
-            # save model weights
+            # save checkpoint
             if epoch % self.config.save_every == 0:
-                torch.save(self.model.state_dict(), os.path.join(log_path, f'{epoch}_weights.pt'))
+                checkpoint = {
+                    'model': self.model.state_dict(),
+                    'optimizer': self.model.optim_state_dict(),
+                    'epoch': epoch + 1
+                }
+                torch.save(checkpoint, os.path.join(log_path, f'{epoch}_weights.pt'))
