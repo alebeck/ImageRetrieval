@@ -2,7 +2,7 @@ import os
 
 import torch
 from torch.utils.data import Dataset
-from torchvision.transforms import Compose, Resize, ToTensor
+from torchvision.transforms import ToTensor
 from PIL import Image
 
 from models.abstract import CustomModule, EmbeddingGenerator
@@ -11,7 +11,7 @@ from utils.functions import unit_normalize
 
 class EmbeddingDataset(Dataset):
 
-    def __init__(self, model_class, model_args, weights_path, paths_day, paths_night, layers, img_size=128):
+    def __init__(self, model_class, model_args, weights_path, paths_day, paths_night, layers, transform=None):
         use_cuda = torch.cuda.is_available()
 
         model: (CustomModule, EmbeddingGenerator) = model_class(**model_args)
@@ -20,12 +20,10 @@ class EmbeddingDataset(Dataset):
         else:
             model.load_state_dict(torch.load(weights_path, map_location='cpu')['model'])
 
-        print("Calculating embeddings... ", end='')
+        print("Calculating embeddings... ", end='', flush=True)
 
-        transform = Compose([
-            Resize(img_size),
-            ToTensor()
-        ])
+        if transform is None:
+            transform = ToTensor()
 
         self.embeddings_day, self.embeddings_night = [], []
 

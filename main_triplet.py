@@ -1,3 +1,5 @@
+from torchvision.transforms import Compose, CenterCrop, Resize, ToTensor
+
 from datasets.embedding import EmbeddingDataset
 from models.feature_weight import FeatureWeight
 from models.simple_model import SimpleModel
@@ -24,7 +26,12 @@ config = TrainingConfig(
         ],
         'paths_night': [
             '../data/pairs/night'
-        ]
+        ],
+        'transform': Compose([
+            CenterCrop(760),
+            Resize(128),
+            ToTensor()
+        ])
     },
     model=FeatureWeight,
     model_args={ 'layers': layers },
