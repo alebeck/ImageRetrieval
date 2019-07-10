@@ -16,9 +16,9 @@ class EmbeddingDataset(Dataset):
 
         model: (CustomModule, EmbeddingGenerator) = model_class(**model_args)
         if use_cuda:
-            model.load_state_dict(torch.load(weights_path))
+            model.load_state_dict(torch.load(weights_path)['model'])
         else:
-            model.load_state_dict(torch.load(weights_path, map_location='cpu'))
+            model.load_state_dict(torch.load(weights_path, map_location='cpu')['model'])
 
         print("Calculating embeddings... ", end='')
 
