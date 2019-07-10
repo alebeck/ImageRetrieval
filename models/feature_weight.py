@@ -2,6 +2,7 @@ import os
 
 import torch
 from torch.optim import Adam
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from models.abstract import CustomModule
 from utils.functions import select_triplets
@@ -20,7 +21,8 @@ class FeatureWeight(CustomModule):
             layer: torch.ones(size=(1, size)).float().t().requires_grad_() for layer, size in layers.items()
         }
 
-        self.optimizer = Adam(self.weights.values())
+        self.optimizer = None
+        self.scheduler = None
 
     def __call__(self, input):
         raise NotImplementedError  # TODO
@@ -111,10 +113,21 @@ class FeatureWeight(CustomModule):
         self.weights = {
             layer: torch.ones(size=(1, size), device='cuda').float().t().requires_grad_() for layer, size in self.layers.items()
         }
-        self.optimizer = Adam(self.weights.values())
 
     def state_dict(self):
         return self.weights
 
     def load_state_dict(self, state_dict):
         self.weights = state_dict
+
+    def init_optimizers(self):
+        self.optimizer = Adam(self.weights.values())
+        self.scheduler = ReduceLROnPlateau(self.optimizer, patience=15, verbose=True)
+
+    def optim_state_dict(self):
+        return {
+            'optimizer': self.optimizer.state_dict()
+        }
+
+    def load_optim_state_dict(self, state_dict):
+        self.optimizer.load_state_dict(state_dict['optimizer'])

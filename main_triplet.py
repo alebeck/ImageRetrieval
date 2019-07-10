@@ -28,6 +28,7 @@ config = TrainingConfig(
     },
     model=FeatureWeight,
     model_args={ 'layers': layers },
+    checkpoint_path=None,
     batch_size=16,
     epochs=10000,
     val_size=0.2,
