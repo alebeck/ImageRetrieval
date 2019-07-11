@@ -193,6 +193,11 @@ class CycleModel(CustomModule):
             'decoder_night': self.ae_night.decoder.state_dict()
         }
 
+    def optim_state_dict(self):
+        return {
+            'optimizer': self.optimizer.state_dict(),
+        }
+
     def load_state_dict(self, state):
         self.ae_day.encoder_lower.load_state_dict(state['encoder_lower_day'])
         self.ae_night.encoder_lower.load_state_dict(state['encoder_lower_night'])
