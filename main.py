@@ -1,3 +1,5 @@
+from torchvision.transforms import ToTensor, Resize, Compose, CenterCrop
+
 from datasets.day_night import DayNightDataset
 from models.cycle_model import CycleModel
 from utils.config import TrainingConfig
@@ -8,25 +10,27 @@ config = TrainingConfig(
     dataset=DayNightDataset,
     dataset_args={
         'paths_day': [
-            'data/sun/right',
-            'data/sun/left',
-            'data/overcast-summer/right',
-            'data/overcast-summer/left',
+            'data/synthia_seq4_repacked/day/left',
+            'data/synthia_seq4_repacked/day/right',
         ],
         'paths_night': [
-            'data/night/right',
-            'data/night/left',
-            'data/night-rain/right',
-            'data/night-rain/left',
+            'data/synthia_seq4_repacked/night/left',
+            'data/synthia_seq4_repacked/night/right',
         ],
+        'transform': Compose([
+            CenterCrop(760),
+            Resize(128),
+            ToTensor()
+        ])
     },
     model=CycleModel,
+    checkpoint_path=None,
     model_args={
         'reconstruction_loss_factor': 1.,
         'cycle_loss_factor': 1.,
     },
     batch_size=64,
-    epochs=60,
+    epochs=30,
     val_size=0.2,
     log_path='log',
     save_every=100
