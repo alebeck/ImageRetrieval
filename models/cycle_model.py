@@ -27,6 +27,17 @@ class CycleModel(CustomModule):
         self.reconstruction_loss_factor = reconstruction_loss_factor
         self.cycle_loss_factor = cycle_loss_factor
 
+        self.optimizer = None
+        self.scheduler = None
+
+    def __call__(self, input):
+        raise NotImplementedError  # TODO
+
+    def init_optimizers(self):
+        """
+        Is called right before training and after model has been moved to GPU.
+        Supposed to initialize optimizers and schedulers.
+        """
         # TODO is there a nicer way to write this?
         parameters = set()
         parameters |= set(self.ae_day.parameters())
@@ -35,9 +46,6 @@ class CycleModel(CustomModule):
 
         # initialize scheduler
         self.scheduler = ReduceLROnPlateau(self.optimizer, patience=15, verbose=True)  # TODO patience in args
-
-    def __call__(self, input):
-        raise NotImplementedError  # TODO
 
     def train_epoch(self, train_loader, epoch, use_cuda, log_path, **kwargs):
         loss_day2night2day_sum, loss_night2day2night_sum, loss_day2day_sum, loss_night2night_sum = 0, 0, 0, 0
