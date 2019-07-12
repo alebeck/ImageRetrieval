@@ -29,7 +29,7 @@ config = TrainingConfig(
         'reconstruction_loss_factor': 1.,
         'cycle_loss_factor': 1.,
     },
-    batch_size=64,
+    batch_size=32,
     epochs=61,
     val_size=0.2,
     log_path='log',
