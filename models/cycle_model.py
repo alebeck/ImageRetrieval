@@ -29,6 +29,8 @@ class CycleModel(CustomModule):
 
         self.optimizer = None
         self.scheduler = None
+        self.grads_day2night2day = None
+        self.grads_night2day2night = None
 
     def __call__(self, input):
         raise NotImplementedError  # TODO
@@ -59,6 +61,60 @@ class CycleModel(CustomModule):
             loss_day2night2day, loss_day2day = self.cycle_plus_reconstruction_loss(day_img, self.ae_day, self.ae_night)
             loss = loss_day2night2day * self.cycle_loss_factor + loss_day2day * self.reconstruction_loss_factor
             loss.backward()
+            self.grads_day2night2day = {
+                'enc1_l01': torch.sum(self.ae_day.encoder_lower.conv1_1.weight.grad.abs()),
+                'enc1_l02': torch.sum(self.ae_day.encoder_lower.conv1_2.weight.grad.abs()),
+                'enc1_l03': torch.sum(self.ae_day.encoder_lower.conv2_1.weight.grad.abs()),
+                'enc1_l04': torch.sum(self.ae_day.encoder_lower.conv2_2.weight.grad.abs()),
+                'enc1_l05': torch.sum(self.ae_day.encoder_lower.conv3_1.weight.grad.abs()),
+                'enc1_l06': torch.sum(self.ae_day.encoder_lower.conv3_2.weight.grad.abs()),
+                'enc1_l07': torch.sum(self.ae_day.encoder_upper.conv3_3.weight.grad.abs()),
+                'enc1_l08': torch.sum(self.ae_day.encoder_upper.conv4_1.weight.grad.abs()),
+                'enc1_l09': torch.sum(self.ae_day.encoder_upper.conv4_2.weight.grad.abs()),
+                'enc1_l10': torch.sum(self.ae_day.encoder_upper.conv4_3.weight.grad.abs()),
+                'enc1_l11': torch.sum(self.ae_day.encoder_upper.conv5_1.weight.grad.abs()),
+                'enc1_l12': torch.sum(self.ae_day.encoder_upper.conv5_2.weight.grad.abs()),
+                'enc1_l13': torch.sum(self.ae_day.encoder_upper.conv5_3.weight.grad.abs()),
+                'dec1_l01': torch.sum(self.ae_night.decoder.convt1_1.weight.grad.abs()),
+                'dec1_l02': torch.sum(self.ae_night.decoder.convt1_2.weight.grad.abs()),
+                'dec1_l03': torch.sum(self.ae_night.decoder.convt1_3.weight.grad.abs()),
+                'dec1_l04': torch.sum(self.ae_night.decoder.convt2_1.weight.grad.abs()),
+                'dec1_l05': torch.sum(self.ae_night.decoder.convt2_2.weight.grad.abs()),
+                'dec1_l06': torch.sum(self.ae_night.decoder.convt2_3.weight.grad.abs()),
+                'dec1_l07': torch.sum(self.ae_night.decoder.convt3_1.weight.grad.abs()),
+                'dec1_l08': torch.sum(self.ae_night.decoder.convt3_2.weight.grad.abs()),
+                'dec1_l09': torch.sum(self.ae_night.decoder.convt3_3.weight.grad.abs()),
+                'dec1_l10': torch.sum(self.ae_night.decoder.convt4_1.weight.grad.abs()),
+                'dec1_l11': torch.sum(self.ae_night.decoder.convt4_2.weight.grad.abs()),
+                'dec1_l12': torch.sum(self.ae_night.decoder.convt5_1.weight.grad.abs()),
+                'dec1_l13': torch.sum(self.ae_night.decoder.convt5_2.weight.grad.abs()),
+                'enc2_l01': torch.sum(self.ae_night.encoder_lower.conv1_1.weight.grad.abs()),
+                'enc2_l02': torch.sum(self.ae_night.encoder_lower.conv1_2.weight.grad.abs()),
+                'enc2_l03': torch.sum(self.ae_night.encoder_lower.conv2_1.weight.grad.abs()),
+                'enc2_l04': torch.sum(self.ae_night.encoder_lower.conv2_2.weight.grad.abs()),
+                'enc2_l05': torch.sum(self.ae_night.encoder_lower.conv3_1.weight.grad.abs()),
+                'enc2_l06': torch.sum(self.ae_night.encoder_lower.conv3_2.weight.grad.abs()),
+                'enc2_l07': torch.sum(self.ae_night.encoder_upper.conv3_3.weight.grad.abs()),
+                'enc2_l08': torch.sum(self.ae_night.encoder_upper.conv4_1.weight.grad.abs()),
+                'enc2_l09': torch.sum(self.ae_night.encoder_upper.conv4_2.weight.grad.abs()),
+                'enc2_l10': torch.sum(self.ae_night.encoder_upper.conv4_3.weight.grad.abs()),
+                'enc2_l11': torch.sum(self.ae_night.encoder_upper.conv5_1.weight.grad.abs()),
+                'enc2_l12': torch.sum(self.ae_night.encoder_upper.conv5_2.weight.grad.abs()),
+                'enc2_l13': torch.sum(self.ae_night.encoder_upper.conv5_3.weight.grad.abs()),
+                'dec2_l01': torch.sum(self.ae_day.decoder.convt1_1.weight.grad.abs()),
+                'dec2_l02': torch.sum(self.ae_day.decoder.convt1_2.weight.grad.abs()),
+                'dec2_l03': torch.sum(self.ae_day.decoder.convt1_3.weight.grad.abs()),
+                'dec2_l04': torch.sum(self.ae_day.decoder.convt2_1.weight.grad.abs()),
+                'dec2_l05': torch.sum(self.ae_day.decoder.convt2_2.weight.grad.abs()),
+                'dec2_l06': torch.sum(self.ae_day.decoder.convt2_3.weight.grad.abs()),
+                'dec2_l07': torch.sum(self.ae_day.decoder.convt3_1.weight.grad.abs()),
+                'dec2_l08': torch.sum(self.ae_day.decoder.convt3_2.weight.grad.abs()),
+                'dec2_l09': torch.sum(self.ae_day.decoder.convt3_3.weight.grad.abs()),
+                'dec2_l10': torch.sum(self.ae_day.decoder.convt4_1.weight.grad.abs()),
+                'dec2_l11': torch.sum(self.ae_day.decoder.convt4_2.weight.grad.abs()),
+                'dec2_l12': torch.sum(self.ae_day.decoder.convt5_1.weight.grad.abs()),
+                'dec2_l13': torch.sum(self.ae_day.decoder.convt5_2.weight.grad.abs()),
+            }
             self.optimizer.step()
 
             # Night -> Day -> Night
@@ -67,6 +123,60 @@ class CycleModel(CustomModule):
                 = self.cycle_plus_reconstruction_loss(night_img, self.ae_night, self.ae_day)
             loss = loss_night2day2night * self.cycle_loss_factor + loss_night2night * self.reconstruction_loss_factor
             loss.backward()
+            self.grads_night2day2night = {
+                'enc1_l01': torch.sum(self.ae_night.encoder_lower.conv1_1.weight.grad.abs()),
+                'enc1_l02': torch.sum(self.ae_night.encoder_lower.conv1_2.weight.grad.abs()),
+                'enc1_l03': torch.sum(self.ae_night.encoder_lower.conv2_1.weight.grad.abs()),
+                'enc1_l04': torch.sum(self.ae_night.encoder_lower.conv2_2.weight.grad.abs()),
+                'enc1_l05': torch.sum(self.ae_night.encoder_lower.conv3_1.weight.grad.abs()),
+                'enc1_l06': torch.sum(self.ae_night.encoder_lower.conv3_2.weight.grad.abs()),
+                'enc1_l07': torch.sum(self.ae_night.encoder_upper.conv3_3.weight.grad.abs()),
+                'enc1_l08': torch.sum(self.ae_night.encoder_upper.conv4_1.weight.grad.abs()),
+                'enc1_l09': torch.sum(self.ae_night.encoder_upper.conv4_2.weight.grad.abs()),
+                'enc1_l10': torch.sum(self.ae_night.encoder_upper.conv4_3.weight.grad.abs()),
+                'enc1_l11': torch.sum(self.ae_night.encoder_upper.conv5_1.weight.grad.abs()),
+                'enc1_l12': torch.sum(self.ae_night.encoder_upper.conv5_2.weight.grad.abs()),
+                'enc1_l13': torch.sum(self.ae_night.encoder_upper.conv5_3.weight.grad.abs()),
+                'dec1_l01': torch.sum(self.ae_day.decoder.convt1_1.weight.grad.abs()),
+                'dec1_l02': torch.sum(self.ae_day.decoder.convt1_2.weight.grad.abs()),
+                'dec1_l03': torch.sum(self.ae_day.decoder.convt1_3.weight.grad.abs()),
+                'dec1_l04': torch.sum(self.ae_day.decoder.convt2_1.weight.grad.abs()),
+                'dec1_l05': torch.sum(self.ae_day.decoder.convt2_2.weight.grad.abs()),
+                'dec1_l06': torch.sum(self.ae_day.decoder.convt2_3.weight.grad.abs()),
+                'dec1_l07': torch.sum(self.ae_day.decoder.convt3_1.weight.grad.abs()),
+                'dec1_l08': torch.sum(self.ae_day.decoder.convt3_2.weight.grad.abs()),
+                'dec1_l09': torch.sum(self.ae_day.decoder.convt3_3.weight.grad.abs()),
+                'dec1_l10': torch.sum(self.ae_day.decoder.convt4_1.weight.grad.abs()),
+                'dec1_l11': torch.sum(self.ae_day.decoder.convt4_2.weight.grad.abs()),
+                'dec1_l12': torch.sum(self.ae_day.decoder.convt5_1.weight.grad.abs()),
+                'dec1_l13': torch.sum(self.ae_day.decoder.convt5_2.weight.grad.abs()),
+                'enc2_l01': torch.sum(self.ae_day.encoder_lower.conv1_1.weight.grad.abs()),
+                'enc2_l02': torch.sum(self.ae_day.encoder_lower.conv1_2.weight.grad.abs()),
+                'enc2_l03': torch.sum(self.ae_day.encoder_lower.conv2_1.weight.grad.abs()),
+                'enc2_l04': torch.sum(self.ae_day.encoder_lower.conv2_2.weight.grad.abs()),
+                'enc2_l05': torch.sum(self.ae_day.encoder_lower.conv3_1.weight.grad.abs()),
+                'enc2_l06': torch.sum(self.ae_day.encoder_lower.conv3_2.weight.grad.abs()),
+                'enc2_l07': torch.sum(self.ae_day.encoder_upper.conv3_3.weight.grad.abs()),
+                'enc2_l08': torch.sum(self.ae_day.encoder_upper.conv4_1.weight.grad.abs()),
+                'enc2_l09': torch.sum(self.ae_day.encoder_upper.conv4_2.weight.grad.abs()),
+                'enc2_l10': torch.sum(self.ae_day.encoder_upper.conv4_3.weight.grad.abs()),
+                'enc2_l11': torch.sum(self.ae_day.encoder_upper.conv5_1.weight.grad.abs()),
+                'enc2_l12': torch.sum(self.ae_day.encoder_upper.conv5_2.weight.grad.abs()),
+                'enc2_l13': torch.sum(self.ae_day.encoder_upper.conv5_3.weight.grad.abs()),
+                'dec2_l01': torch.sum(self.ae_night.decoder.convt1_1.weight.grad.abs()),
+                'dec2_l02': torch.sum(self.ae_night.decoder.convt1_2.weight.grad.abs()),
+                'dec2_l03': torch.sum(self.ae_night.decoder.convt1_3.weight.grad.abs()),
+                'dec2_l04': torch.sum(self.ae_night.decoder.convt2_1.weight.grad.abs()),
+                'dec2_l05': torch.sum(self.ae_night.decoder.convt2_2.weight.grad.abs()),
+                'dec2_l06': torch.sum(self.ae_night.decoder.convt2_3.weight.grad.abs()),
+                'dec2_l07': torch.sum(self.ae_night.decoder.convt3_1.weight.grad.abs()),
+                'dec2_l08': torch.sum(self.ae_night.decoder.convt3_2.weight.grad.abs()),
+                'dec2_l09': torch.sum(self.ae_night.decoder.convt3_3.weight.grad.abs()),
+                'dec2_l10': torch.sum(self.ae_night.decoder.convt4_1.weight.grad.abs()),
+                'dec2_l11': torch.sum(self.ae_night.decoder.convt4_2.weight.grad.abs()),
+                'dec2_l12': torch.sum(self.ae_night.decoder.convt5_1.weight.grad.abs()),
+                'dec2_l13': torch.sum(self.ae_night.decoder.convt5_2.weight.grad.abs()),
+            }
             self.optimizer.step()
 
             loss_day2night2day_sum += loss_day2night2day
