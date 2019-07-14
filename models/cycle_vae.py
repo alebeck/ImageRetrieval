@@ -192,13 +192,26 @@ class CycleVAE(CustomModule):
         self.ae_night.cuda()
 
     def state_dict(self):
-        pass
+        return {
+            'encoder_lower_day': self.ae_day.encoder_lower.state_dict(),
+            'encoder_lower_night': self.ae_night.encoder_lower.state_dict(),
+            'encoder_upper': self.ae_day.encoder_upper.state_dict(),
+            'decoder_lower': self.ae_day.decoder_lower.state_dict(),
+            'decoder_upper_day': self.ae_day.decoder_upper.state_dict(),
+            'decoder_upper_night': self.ae_night.decoder_upper.state_dict()
+        }
 
     def optim_state_dict(self):
-        pass
+        return self.optimizer.state_dict()
 
-    def load_state_dict(self, state_dict):
-        pass
+    def load_state_dict(self, state):
+        self.ae_day.encoder_lower.load_state_dict(state['encoder_lower_day'])
+        self.ae_night.encoder_lower.load_state_dict(state['encoder_lower_night'])
+        self.ae_day.encoder_upper.load_state_dict(state['encoder_upper'])
+
+        self.ae_day.decoder_lower.load_state_dict(state['decoder_lower'])
+        self.ae_day.decoder_upper.load_state_dict(state['decoder_upper_day'])
+        self.ae_night.decoder_upper.load_state_dict(state['decoder_upper_night'])
 
     def load_optim_state_dict(self, state_dict):
-        pass
+        self.optimizer.load_state_dict(state_dict)
