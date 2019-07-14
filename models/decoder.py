@@ -69,6 +69,6 @@ class UpperDecoder(nn.Module):
         x = self.up2(x)
         x = f.relu(self.bn2(self.conv6(x))) # ln norm
 
-        x = torch.tanh(self.conv7(x)) # padding reflect
+        x = torch.sigmoid(self.conv7(x)) # padding reflect
 
         return x
