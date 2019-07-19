@@ -30,6 +30,8 @@ class EmbeddingDataset(Dataset):
         if transform is None:
             transform = ToTensor()
 
+        print('Reading in files...')
+
         self.day_files, self.night_files = [], []
         for path in paths_day:
             for filename in sorted(os.listdir(path)):
@@ -57,6 +59,8 @@ class EmbeddingDataset(Dataset):
         imgs_day, imgs_night = torch.cat(imgs_day), torch.cat(imgs_night)
         if use_cuda:
             imgs_day, imgs_night = imgs_day.cuda(), imgs_night.cuda()
+
+        print('Calculating embeddings...')
 
         embeddings_day = model.get_day_embeddings(imgs_day, layers)
         embeddings_night = model.get_night_embeddings(imgs_night, layers)
