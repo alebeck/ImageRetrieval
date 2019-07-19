@@ -27,8 +27,6 @@ class EmbeddingDataset(Dataset):
 
         model.eval()
 
-        print("Calculating embeddings... ", end='', flush=True)
-
         if transform is None:
             transform = ToTensor()
 
@@ -50,7 +48,10 @@ class EmbeddingDataset(Dataset):
         self.embeddings_day, self.embeddings_night = [], []
 
         with torch.no_grad():
-            for i in idx:
+            for count, i in enumerate(idx):
+
+                print(f'\r{count}/{len(idx)}', end='', flush=True)
+
                 with open(self.day_files[i], 'rb') as file:
                     img = transform(Image.open(file)).unsqueeze(0)
                     if use_cuda:
@@ -75,7 +76,7 @@ class EmbeddingDataset(Dataset):
 
                     self.embeddings_night.append(embeddings)
 
-        print('Done')
+        print('\rDone')
 
     def __len__(self):
         return min(len(self.embeddings_day), len(self.embeddings_night))
