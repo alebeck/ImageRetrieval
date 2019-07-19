@@ -22,6 +22,9 @@ class EmbeddingDataset(Dataset):
             else:
                 model.load_state_dict(torch.load(weights_path, map_location='cpu')['model'])
 
+        if use_cuda:
+            model.cuda()
+
         model.eval()
 
         print("Calculating embeddings... ", end='', flush=True)
