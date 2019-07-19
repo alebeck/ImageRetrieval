@@ -61,7 +61,7 @@ class EmbeddingDataset(Dataset):
                     # remove batch dim & normalize
                     for layer, embedding in embeddings.items():
                         normalized = unit_normalize(embedding[0]) if unit_norm else embedding[0]
-                        embeddings[layer] = normalized.detach().cpu()
+                        embeddings[layer] = normalized.detach().cpu().half()
 
                     self.embeddings_day.append(embeddings)
 
@@ -74,9 +74,11 @@ class EmbeddingDataset(Dataset):
                     # remove batch dim
                     for layer, embedding in embeddings.items():
                         normalized = unit_normalize(embedding[0]) if unit_norm else embedding[0]
-                        embeddings[layer] = normalized.detach().cpu()
+                        embeddings[layer] = normalized.detach().cpu().half()
 
                     self.embeddings_night.append(embeddings)
+
+            torch.cuda.empty_cache()
 
         print('\rDone')
 
@@ -84,4 +86,5 @@ class EmbeddingDataset(Dataset):
         return min(len(self.embeddings_day), len(self.embeddings_night))
 
     def __getitem__(self, index):
-        return self.embeddings_day[index], self.embeddings_night[index]
+        return {l: e.float() for l, e in self.embeddings_day[index].items()}, \
+               {l: e.float() for l, e in self.embeddings_night[index].items()}
