@@ -12,8 +12,8 @@ from utils.functions import unit_normalize
 
 class EmbeddingDataset(Dataset):
 
-    def __init__(self, model_class, model_args, weights_path, paths_day, paths_night, layers, transform=None, unit_norm=True, count=400):
-        use_cuda = torch.cuda.is_available()
+    def __init__(self, model_class, model_args, weights_path, paths_day, paths_night, layers, transform=None, unit_norm=True, count=400, use_cuda=True):
+        use_cuda = torch.cuda.is_available() and use_cuda
 
         model: (CustomModule, EmbeddingGenerator) = model_class(**model_args)
         if weights_path is not None:
