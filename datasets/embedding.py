@@ -19,7 +19,6 @@ class EmbeddingDataset(Dataset):
         if weights_path is not None:
             if use_cuda:
                 model.load_state_dict(torch.load(weights_path)['model'])
-                model.cuda()
             else:
                 model.load_state_dict(torch.load(weights_path, map_location='cpu')['model'])
 
@@ -50,8 +49,10 @@ class EmbeddingDataset(Dataset):
         with torch.no_grad():
             for i in idx:
                 with open(self.day_files[i], 'rb') as file:
-                    img = Image.open(file)
-                    embeddings = model.get_day_embeddings(transform(img).unsqueeze(0), layers)
+                    img = transform(Image.open(file)).unsqueeze(0)
+                    if use_cuda:
+                        img = img.cuda()
+                    embeddings = model.get_day_embeddings(img, layers)
 
                     # remove batch dim & normalize
                     for layer, embedding in embeddings.items():
@@ -60,8 +61,10 @@ class EmbeddingDataset(Dataset):
                     self.embeddings_day.append(embeddings)
 
                 with open(self.night_files[i], 'rb') as file:
-                    img = Image.open(file)
-                    embeddings = model.get_night_embeddings(transform(img).unsqueeze(0), layers)
+                    img = transform(Image.open(file)).unsqueeze(0)
+                    if use_cuda:
+                        img = img.cuda()
+                    embeddings = model.get_night_embeddings(img, layers)
 
                     # remove batch dim
                     for layer, embedding in embeddings.items():
