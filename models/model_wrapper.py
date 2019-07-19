@@ -25,7 +25,7 @@ class ModelWrapper(CustomModule, EmbeddingGenerator):
         raise NotImplementedError
 
     def eval(self):
-        raise NotImplementedError
+        self.model.eval()
 
     def cuda(self):
         self.model.cuda()

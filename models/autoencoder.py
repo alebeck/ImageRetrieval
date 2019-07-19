@@ -19,9 +19,8 @@ class Autoencoder(nn.Module):
 
     def forward(self, img):
         # Reduced VAE implementation with mean = latent and std all ones
-        latent = self.encode(img)
+        latent, noise = self.encode(img)
         if self.training:
-            noise = torch.randn(latent.size()).to(latent.device)
             out = self.decode(latent + noise)
         else:
             out = self.decode(latent)

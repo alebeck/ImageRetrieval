@@ -1,25 +1,40 @@
 import os
 
 import torch
+from torch import nn
 from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchvision.transforms import ToPILImage
 
-from models.abstract import CustomModule
+from models.abstract import CustomModule, EmbeddingGenerator
 from models.autoencoder import Autoencoder
 from models.decoder import LowerDecoder, UpperDecoder
 from models.encoder import UpperEncoder, LowerEncoder
-
-
-def reconst_loss(x, target):
-    return torch.mean(torch.abs(x - target))
 
 def kl_loss(mu):
     mu_2 = torch.pow(mu, 2)
     return torch.mean(mu_2)
 
 
-class CycleVAE(CustomModule):
+class CycleVAE(CustomModule, EmbeddingGenerator):
+
+    def get_day_embeddings(self, img, layers):
+        """
+        Returns deep embeddings for the passed layers inside the upper encoder.
+        """
+        # forward pass
+        latent = self.ae_day.encode(img)[0]
+
+        return {'latent': latent}
+
+    def get_night_embeddings(self, img, layers):
+        """
+        Returns deep embeddings for the passed layers inside the upper encoder.
+        """
+        # forward pass
+        latent = self.ae_night.encode(img)[0]
+
+        return {'latent': latent}
 
     def __init__(self, params: dict):
         self.params = params
@@ -27,6 +42,8 @@ class CycleVAE(CustomModule):
         encoder_upper, decoder_lower = UpperEncoder(), LowerDecoder()
         self.ae_day = Autoencoder(LowerEncoder(), encoder_upper, decoder_lower, UpperDecoder())
         self.ae_night = Autoencoder(LowerEncoder(), encoder_upper, decoder_lower, UpperDecoder())
+
+        self.reconst_loss = nn.L1Loss()
 
         self.optimizer = None
         self.scheduler = None
@@ -72,12 +89,12 @@ class CycleVAE(CustomModule):
             reconst_cycle_night = self.ae_night.decode(latent_night_to_day + noise_night_to_day)
 
             # loss formulations
-            loss_reconst_day = reconst_loss(reconst_day, img_day)
-            loss_reconst_night = reconst_loss(reconst_night, img_night)
+            loss_reconst_day = self.reconst_loss(reconst_day, img_day)
+            loss_reconst_night = self.reconst_loss(reconst_night, img_night)
             loss_kl_reconst_day = kl_loss(latent_day)
             loss_kl_reconst_night = kl_loss(latent_night)
-            loss_cycle_day = reconst_loss(reconst_cycle_day, img_day)
-            loss_cycle_night = reconst_loss(reconst_cycle_night, img_night)
+            loss_cycle_day = self.reconst_loss(reconst_cycle_day, img_day)
+            loss_cycle_night = self.reconst_loss(reconst_cycle_night, img_night)
             loss_kl_cycle_day = kl_loss(latent_night_to_day)
             loss_kl_cycle_night = kl_loss(latent_day_to_night)
 
@@ -132,12 +149,12 @@ class CycleVAE(CustomModule):
                 reconst_cycle_night = self.ae_night.decode(latent_night_to_day + noise_night_to_day)
 
                 # loss formulations
-                loss_reconst_day = reconst_loss(reconst_day, img_day)
-                loss_reconst_night = reconst_loss(reconst_night, img_night)
+                loss_reconst_day = self.reconst_loss(reconst_day, img_day)
+                loss_reconst_night = self.reconst_loss(reconst_night, img_night)
                 loss_kl_reconst_day = kl_loss(latent_day)
                 loss_kl_reconst_night = kl_loss(latent_night)
-                loss_cycle_day = reconst_loss(reconst_cycle_day, img_day)
-                loss_cycle_night = reconst_loss(reconst_cycle_night, img_night)
+                loss_cycle_day = self.reconst_loss(reconst_cycle_day, img_day)
+                loss_cycle_night = self.reconst_loss(reconst_cycle_night, img_night)
                 loss_kl_cycle_day = kl_loss(latent_night_to_day)
                 loss_kl_cycle_night = kl_loss(latent_day_to_night)
 
