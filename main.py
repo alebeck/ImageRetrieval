@@ -29,7 +29,7 @@ config = TrainingConfig(
     batch_size=32,
     epochs=71,
     val_size=0.2,
-    log_path='drive/My Drive/adl4cv/training-logs/baseline-reconstruction-loss',
+    log_path='drive/My Drive/adl4cv/training-logs/baseline-one-ae-reconstruction-loss',
     save_every=5
 )
 

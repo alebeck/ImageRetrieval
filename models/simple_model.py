@@ -20,8 +20,9 @@ class SimpleModel(CustomModule, EmbeddingGenerator):
     def __init__(self):
         # share weights of the upper encoder stage
         encoder_upper = UpperEncoder()
-        self.ae_day = Autoencoder(LowerEncoder(), encoder_upper, Decoder())
-        self.ae_night = Autoencoder(LowerEncoder(), encoder_upper, Decoder())
+        encoder_lower = LowerEncoder()
+        self.ae_day = Autoencoder(encoder_lower, encoder_upper, Decoder())
+        self.ae_night = Autoencoder(encoder_lower, encoder_upper, Decoder())
         self.loss_fn = nn.L1Loss()  # TODO Which loss?
 
         self.optimizer_day = None
