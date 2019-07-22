@@ -30,10 +30,10 @@ config = TrainingConfig(
         'cycle_loss_factor': 1.,
     },
     batch_size=32,
-    epochs=61,
+    epochs=36,
     val_size=0.2,
-    log_path='log',
-    save_every=100
+    log_path='drive/My Drive/adl4cv/training-logs/baseline-cycle-loss-with-training-wheels',
+    save_every=5
 )
 
 trainer = Trainer(config)
