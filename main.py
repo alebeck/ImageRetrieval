@@ -32,7 +32,7 @@ config = TrainingConfig(
     batch_size=32,
     epochs=36,
     val_size=0.2,
-    log_path='drive/My Drive/adl4cv/training-logs/baseline-cycle-loss-with-training-wheels',
+    log_path='drive/My Drive/adl4cv/training-logs/baseline-one-ae-cycle-loss-with-training-wheels',
     save_every=5
 )
 

@@ -21,8 +21,9 @@ class CycleModel(CustomModule):
     def __init__(self, reconstruction_loss_factor: float, cycle_loss_factor: float):
         # share weights of the upper encoder stage
         encoder_upper = UpperEncoder()
-        self.ae_day = Autoencoder(LowerEncoder(), encoder_upper, Decoder())
-        self.ae_night = Autoencoder(LowerEncoder(), encoder_upper, Decoder())
+        encoder_lower = LowerEncoder()
+        self.ae_day = Autoencoder(encoder_lower, encoder_upper, Decoder())
+        self.ae_night = Autoencoder(encoder_lower, encoder_upper, Decoder())
         self.loss_fn = nn.L1Loss()
         self.reconstruction_loss_factor = reconstruction_loss_factor
         self.cycle_loss_factor = cycle_loss_factor
