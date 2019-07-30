@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 import torch
 from torch.utils.data import Dataset
 from torchvision.transforms import ToTensor
@@ -11,56 +12,75 @@ from utils.functions import unit_normalize
 
 class EmbeddingDataset(Dataset):
 
-    def __init__(self, model_class, model_args, weights_path, paths_day, paths_night, layers, transform=None):
-        use_cuda = torch.cuda.is_available()
+    def __init__(self, model_class, model_args, weights_path, paths_day, paths_night, layers, transform=None,
+                 unit_norm=True, use_cuda=True):
+        use_cuda = torch.cuda.is_available() and use_cuda
 
         model: (CustomModule, EmbeddingGenerator) = model_class(**model_args)
-        if use_cuda:
-            model.load_state_dict(torch.load(weights_path)['model'])
-        else:
-            model.load_state_dict(torch.load(weights_path, map_location='cpu')['model'])
+        if weights_path is not None:
+            if use_cuda:
+                model.load_state_dict(torch.load(weights_path)['model'])
+            else:
+                model.load_state_dict(torch.load(weights_path, map_location='cpu')['model'])
 
-        print("Calculating embeddings... ", end='', flush=True)
+        if use_cuda:
+            model.cuda()
+
+        model.eval()
 
         if transform is None:
             transform = ToTensor()
 
-        self.embeddings_day, self.embeddings_night = [], []
-
+        self.day_files, self.night_files = [], []
         for path in paths_day:
             for filename in sorted(os.listdir(path)):
-                if filename.startswith('.'):
-                    continue
-
-                with open(os.path.join(path, filename), 'rb') as file:
-                    img = Image.open(file)
-                    embeddings = model.get_day_embeddings(transform(img).unsqueeze(0), layers)
-
-                    # remove batch dim & normalize
-                    for layer, embedding in embeddings.items():
-                        embeddings[layer] = unit_normalize(embedding[0])
-
-                    self.embeddings_day.append(embeddings)
+                if not filename.startswith('.'):
+                    self.day_files.append(os.path.join(path, filename))
 
         for path in paths_night:
             for filename in sorted(os.listdir(path)):
-                if filename.startswith('.'):
-                    continue
+                if not filename.startswith('.'):
+                    self.night_files.append(os.path.join(path, filename))
 
-                with open(os.path.join(path, filename), 'rb') as file:
-                    img = Image.open(file)
-                    embeddings = model.get_night_embeddings(transform(img).unsqueeze(0), layers)
+        idx = np.arange(min(len(self.day_files), len(self.night_files)))
+        self.embeddings_day, self.embeddings_night = [], []
+
+        with torch.no_grad():
+            for count, i in enumerate(idx):
+
+                print(f'\r{count}/{len(idx)}', end='', flush=True)
+
+                with open(self.day_files[i], 'rb') as file:
+                    img = transform(Image.open(file)).unsqueeze(0)
+                    if use_cuda:
+                        img = img.cuda()
+                    embeddings = model.get_day_embeddings(img, layers)
+
+                    # remove batch dim & normalize
+                    for layer, embedding in embeddings.items():
+                        normalized = unit_normalize(embedding[0]) if unit_norm else embedding[0]
+                        embeddings[layer] = normalized.detach().cpu().half()
+
+                    self.embeddings_day.append(embeddings)
+
+                with open(self.night_files[i], 'rb') as file:
+                    img = transform(Image.open(file)).unsqueeze(0)
+                    if use_cuda:
+                        img = img.cuda()
+                    embeddings = model.get_night_embeddings(img, layers)
 
                     # remove batch dim
                     for layer, embedding in embeddings.items():
-                        embeddings[layer] = unit_normalize(embedding[0])
+                        normalized = unit_normalize(embedding[0]) if unit_norm else embedding[0]
+                        embeddings[layer] = normalized.detach().cpu().half()
 
                     self.embeddings_night.append(embeddings)
 
-        print('Done')
+        print('\rDone')
 
     def __len__(self):
         return min(len(self.embeddings_day), len(self.embeddings_night))
 
     def __getitem__(self, index):
-        return self.embeddings_day[index], self.embeddings_night[index]
+        return {l: e.float() for l, e in self.embeddings_day[index].items()}, \
+               {l: e.float() for l, e in self.embeddings_night[index].items()}

@@ -16,6 +16,8 @@ class DataSplitter:
         train_sampler = SubsetRandomSampler(train_idx)
         val_sampler = SubsetRandomSampler(val_idx)
 
+        self.train_idx, self.val_idx = train_idx, val_idx
+
         # initialize data loaders
         self.train_loader = DataLoader(
             dataset,

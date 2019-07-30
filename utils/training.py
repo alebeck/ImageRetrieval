@@ -47,8 +47,12 @@ class Trainer:
             os.makedirs(log_path)
 
         # log config
-        with open(os.path.join(log_path, 'config.pickle'), 'wb+') as f:
+        with open(os.path.join(log_path, 'config.pkl'), 'wb+') as f:
             pickle.dump(self.config, f)
+
+        # log val indices
+        with open(os.path.join(log_path, 'val_idx.pkl'), 'wb+') as f:
+            pickle.dump(self.data.val_idx, f)
 
         for epoch in range(self.epoch_start, self.config.epochs):
             ### TRAINING STEP ###

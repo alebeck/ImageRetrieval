@@ -17,15 +17,17 @@ class DayNightDataset(Dataset):
 
         for path in paths_day:
             for filename in sorted(os.listdir(path)):
-                with open(os.path.join(path, filename), 'rb') as file:
-                    img = Image.open(file)
-                    self.images_day.append(transform(img))
+                if not filename.startswith('.'):
+                    with open(os.path.join(path, filename), 'rb') as file:
+                        img = Image.open(file)
+                        self.images_day.append(transform(img))
 
         for path in paths_night:
             for filename in sorted(os.listdir(path)):
-                with open(os.path.join(path, filename), 'rb') as file:
-                    img = Image.open(file)
-                    self.images_night.append(transform(img))
+                if not filename.startswith('.'):
+                    with open(os.path.join(path, filename), 'rb') as file:
+                        img = Image.open(file)
+                        self.images_night.append(transform(img))
 
     def __len__(self):
         return min(len(self.images_day), len(self.images_night))
