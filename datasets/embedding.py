@@ -12,7 +12,8 @@ from utils.functions import unit_normalize
 
 class EmbeddingDataset(Dataset):
 
-    def __init__(self, model_class, model_args, weights_path, paths_day, paths_night, layers, transform=None, unit_norm=True, count=400, use_cuda=True):
+    def __init__(self, model_class, model_args, weights_path, paths_day, paths_night, layers, transform=None,
+                 unit_norm=True, use_cuda=True):
         use_cuda = torch.cuda.is_available() and use_cuda
 
         model: (CustomModule, EmbeddingGenerator) = model_class(**model_args)
@@ -30,9 +31,7 @@ class EmbeddingDataset(Dataset):
         if transform is None:
             transform = ToTensor()
 
-        self.day_files = []
-        self.night_files = []
-
+        self.day_files, self.night_files = [], []
         for path in paths_day:
             for filename in sorted(os.listdir(path)):
                 if not filename.startswith('.'):
@@ -43,8 +42,7 @@ class EmbeddingDataset(Dataset):
                 if not filename.startswith('.'):
                     self.night_files.append(os.path.join(path, filename))
 
-        idx = np.random.choice(np.arange(min(len(self.day_files), len(self.night_files))), count, replace=False)
-
+        idx = np.arange(min(len(self.day_files), len(self.night_files)))
         self.embeddings_day, self.embeddings_night = [], []
 
         with torch.no_grad():
@@ -77,8 +75,6 @@ class EmbeddingDataset(Dataset):
                         embeddings[layer] = normalized.detach().cpu().half()
 
                     self.embeddings_night.append(embeddings)
-
-            torch.cuda.empty_cache()
 
         print('\rDone')
 

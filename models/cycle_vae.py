@@ -17,6 +17,9 @@ def kl_loss(mu):
 
 
 class CycleVAE(CustomModule, EmbeddingGenerator):
+    """
+    CycleVAE model. This is the model which was used for evaluation.
+    """
 
     def get_day_embeddings(self, img, layers):
         """
@@ -49,7 +52,7 @@ class CycleVAE(CustomModule, EmbeddingGenerator):
         self.scheduler = None
 
     def __call__(self, input):
-        raise NotImplementedError # TODO
+        raise NotImplementedError
 
     def init_optimizers(self):
         """
@@ -97,8 +100,6 @@ class CycleVAE(CustomModule, EmbeddingGenerator):
             loss_cycle_night = self.reconst_loss(reconst_cycle_night, img_night)
             loss_kl_cycle_day = kl_loss(latent_night_to_day)
             loss_kl_cycle_night = kl_loss(latent_day_to_night)
-
-            # TODO perceptual loss
 
             loss = \
                 self.params['loss_reconst'] * (loss_reconst_day + loss_reconst_night) + \
@@ -158,8 +159,6 @@ class CycleVAE(CustomModule, EmbeddingGenerator):
                 loss_kl_cycle_day = kl_loss(latent_night_to_day)
                 loss_kl_cycle_night = kl_loss(latent_day_to_night)
 
-                # TODO perceptual loss
-
                 loss = \
                     self.params['loss_reconst'] * (loss_reconst_day + loss_reconst_night) + \
                     self.params['loss_kl_reconst'] * (loss_kl_reconst_day + loss_kl_reconst_night) + \
@@ -167,7 +166,6 @@ class CycleVAE(CustomModule, EmbeddingGenerator):
                     self.params['loss_kl_cycle'] * (loss_kl_cycle_day + loss_kl_cycle_night)
 
                 loss_sum += loss.detach().item()
-
 
         loss_mean = loss_sum / len(val_loader)
 

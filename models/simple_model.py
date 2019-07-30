@@ -7,7 +7,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchvision.transforms import ToPILImage
 
 from models.abstract import CustomModule, EmbeddingGenerator
-from models.decoder import Decoder
+from models.decoder import LowerDecoder, UpperDecoder
 from models.encoder import LowerEncoder, UpperEncoder
 from models.autoencoder import Autoencoder
 
@@ -18,11 +18,10 @@ class SimpleModel(CustomModule, EmbeddingGenerator):
     ae_night: Autoencoder
 
     def __init__(self):
-        # share weights of the upper encoder stage
-        encoder_upper = UpperEncoder()
-        self.ae_day = Autoencoder(LowerEncoder(), encoder_upper, Decoder())
-        self.ae_night = Autoencoder(LowerEncoder(), encoder_upper, Decoder())
-        self.loss_fn = nn.L1Loss()  # TODO Which loss?
+        encoder_upper, decoder_lower = UpperEncoder(), LowerDecoder()
+        self.ae_day = Autoencoder(LowerEncoder(), encoder_upper, decoder_lower, UpperDecoder())
+        self.ae_night = Autoencoder(LowerEncoder(), encoder_upper, decoder_lower, UpperDecoder())
+        self.loss_fn = nn.L1Loss()
 
         self.optimizer_day = None
         self.optimizer_night = None
@@ -30,17 +29,17 @@ class SimpleModel(CustomModule, EmbeddingGenerator):
         self.scheduler_night = None
 
     def __call__(self, input):
-        raise NotImplementedError # TODO
+        raise NotImplementedError
 
     def init_optimizers(self):
         """
         Is called right before training and after model has been moved to GPU.
         Supposed to initialize optimizers and schedulers.
         """
-        self.optimizer_day = Adam(self.ae_day.parameters(), lr=1e-4)  # TODO put args in config (lr, weight_decay)
-        self.optimizer_night = Adam(self.ae_night.parameters(), lr=1e-4)  # TODO put args in config (lr, weight_decay)
-        self.scheduler_day = ReduceLROnPlateau(self.optimizer_day, patience=15, verbose=True)  # TODO patience in args
-        self.scheduler_night = ReduceLROnPlateau(self.optimizer_night, patience=15, verbose=True)  # TODO patience in args
+        self.optimizer_day = Adam(self.ae_day.parameters(), lr=1e-4)
+        self.optimizer_night = Adam(self.ae_night.parameters(), lr=1e-4)
+        self.scheduler_day = ReduceLROnPlateau(self.optimizer_day, patience=15, verbose=True)
+        self.scheduler_night = ReduceLROnPlateau(self.optimizer_night, patience=15, verbose=True)
 
     def train_epoch(self, train_loader, epoch, use_cuda, log_path, **kwargs):
         loss_day_sum, loss_night_sum = 0, 0
