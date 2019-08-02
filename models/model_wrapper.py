@@ -42,7 +42,7 @@ class ModelWrapper(CustomModule, EmbeddingGenerator):
     def load_optim_state_dict(self, state_dict):
         raise NotImplementedError
 
-    def register_hooks(self, layers):  # TODO put this and the next method in context manager
+    def register_hooks(self, layers):
         """
         This function is not supposed to be called from outside the class.
         """

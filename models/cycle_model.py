@@ -31,21 +31,20 @@ class CycleModel(CustomModule):
         self.scheduler = None
 
     def __call__(self, input):
-        raise NotImplementedError  # TODO
+        raise NotImplementedError
 
     def init_optimizers(self):
         """
         Is called right before training and after model has been moved to GPU.
         Supposed to initialize optimizers and schedulers.
         """
-        # TODO is there a nicer way to write this?
         parameters = set()
         parameters |= set(self.ae_day.parameters())
         parameters |= set(self.ae_night.parameters())
-        self.optimizer = Adam(parameters)  # TODO put args in config (lr, weight_decay)
+        self.optimizer = Adam(parameters)
 
         # initialize scheduler
-        self.scheduler = ReduceLROnPlateau(self.optimizer, patience=15, verbose=True)  # TODO patience in args
+        self.scheduler = ReduceLROnPlateau(self.optimizer, patience=15, verbose=True)
 
     def train_epoch(self, train_loader, epoch, use_cuda, log_path, **kwargs):
         loss_day2night2day_sum, loss_night2day2night_sum, loss_day2day_sum, loss_night2night_sum = 0, 0, 0, 0

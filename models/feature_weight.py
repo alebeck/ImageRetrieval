@@ -25,7 +25,7 @@ class FeatureWeight(CustomModule):
         self.scheduler = None
 
     def __call__(self, input):
-        raise NotImplementedError  # TODO
+        raise NotImplementedError
 
     def calculate_loss(self, a, p, n, use_cuda):
         # weight channels of a, p and n

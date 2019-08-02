@@ -129,7 +129,7 @@ class SimpleModel(CustomModule, EmbeddingGenerator):
         for name, img in samples.items():
             ToPILImage()(img.cpu()).save(os.path.join(log_path, f'{epoch}_{name}.jpeg'), 'JPEG')
 
-    def register_hooks(self, layers): # TODO put this and the next method in context manager
+    def register_hooks(self, layers):
         """
         This function is not supposed to be called from outside the class.
         """
