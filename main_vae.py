@@ -23,7 +23,7 @@ config = TrainingConfig(
         ],
         'transform': Compose([
             CenterCrop(760),
-            Resize(16),
+            Resize(256),
             ToTensor()
         ])
     },

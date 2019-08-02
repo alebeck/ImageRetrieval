@@ -42,6 +42,7 @@ class CycleVAE(CustomModule, EmbeddingGenerator):
     def __init__(self, params: dict):
         self.params = params
 
+        # share weights of the upper encoder & lower decoder
         encoder_upper, decoder_lower = UpperEncoder(), LowerDecoder()
         self.ae_day = Autoencoder(LowerEncoder(), encoder_upper, decoder_lower, UpperDecoder())
         self.ae_night = Autoencoder(LowerEncoder(), encoder_upper, decoder_lower, UpperDecoder())

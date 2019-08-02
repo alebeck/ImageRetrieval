@@ -7,8 +7,8 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchvision.transforms import ToPILImage
 
 from models.abstract import CustomModule
-from models.decoder import Decoder
-from models.encoder import LowerEncoder, UpperEncoder
+from models.decoder import LowerDecoder, UpperDecoder
+from models.encoder import UpperEncoder, LowerEncoder
 from models.autoencoder import Autoencoder
 
 
@@ -19,10 +19,10 @@ class CycleModel(CustomModule):
     cycle_loss_factor: float
 
     def __init__(self, reconstruction_loss_factor: float, cycle_loss_factor: float):
-        # share weights of the upper encoder stage
-        encoder_upper = UpperEncoder()
-        self.ae_day = Autoencoder(LowerEncoder(), encoder_upper, Decoder())
-        self.ae_night = Autoencoder(LowerEncoder(), encoder_upper, Decoder())
+        # share weights of the upper encoder & lower decoder
+        encoder_upper, decoder_lower = UpperEncoder(), LowerDecoder()
+        self.ae_day = Autoencoder(LowerEncoder(), encoder_upper, decoder_lower, UpperDecoder())
+        self.ae_night = Autoencoder(LowerEncoder(), encoder_upper, decoder_lower, UpperDecoder())
         self.loss_fn = nn.L1Loss()
         self.reconstruction_loss_factor = reconstruction_loss_factor
         self.cycle_loss_factor = cycle_loss_factor
