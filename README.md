@@ -9,7 +9,9 @@ a latent representation suited for direct comparison of images.
 For training our embedding function, we employ a double-VAE structure based on the work of [3] and [2] that assumes a shared latent space as well as cycle consistency. Both autoencoders of our model have the same structure, 
 and each is responsible for encoding and decoding from or to a specific domain. Our encoders and decoders share their last and first set of layers, respectively.
 
-![Architecture](images/architecture.png)
+<p align="center">
+ <img src="images/architecture.png" width="80%">
+</p>
 
 The encoders consist of eleven convolutional layers each, the last four of which are shared. We use no pooling layers, 
 since too much information is lost in the process. Instead, we use a stride of two on selected layers. After the first three layers,
@@ -21,7 +23,9 @@ between both decoders. After this we use two sets of upsampling, convolutional a
  layer reduces the number of channels to the required number of three, before a final sigmoid activation transforms each value into a (0,1) range.
 
 ## Results
-![Results](images/result_transform.png)
+<p align="center">
+ <img src="images/result_transform.png" width="80%">
+</p>
 Columns: Original image, reconstruction, cycle reconstruction, domain translation;
 Rows: Day image, night image
 
@@ -37,16 +41,26 @@ Using supervised siamese learning, we trained a channel weighting scheme for the
 are important for triplet loss optimization. Moreover, we back-propagated these activations to pixel space, showing that said feature maps primarily
 correspond to structural elements of buildings, as well as trees and small-scale landmarks like hydrants.
 
-![Channels1](images/weights_contribution.png)
+<p align="center">
+ <img src="images/weights_contribution.png" width="80%">
+</p>
 Importance of each of the 256 latent channel with regard to the triplet loss - most channels are not relevant.
 
-![Channels2](images/channels.png) Backpropagated activations of latent channel 206 to pixel space.
+<br/><br/>
+
+<p align="center">
+ <img src="images/channels.png" width="80%">
+</p>
+Backpropagated activations of latent channel 206 to pixel space.
 
 ### Deep Feature Matching
 
 In addition to only comparing the latent representations of images for image retrieval, we experimented with matching deep activations as well (see [5] for reference). However, our results show that more layers lead to longer training time and worse overall performance. This indicates that for our data set and model, the addition of more layers does not contribute valuable features while adding more complexity.
 
-![Deep Feature Matching](images/deep_matching.png) Triplet loss trends for different feature matching depths.
+<p align="center">
+ <img src="images/deep_matching.png" width="80%">
+</p>
+Triplet loss trends for different feature matching depths.
 
 ## Code Organization
 This repository is divided into the following submodules:
