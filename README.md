@@ -26,8 +26,10 @@ between both decoders. After this we use two sets of upsampling, convolutional a
 <p align="center">
  <img src="images/result_transform.png" width="80%">
 </p>
-Columns: Original image, reconstruction, cycle reconstruction, domain translation;
-Rows: Day image, night image
+<p align="center">
+ Columns: Original image, reconstruction, cycle reconstruction, domain translation;
+ Rows: Day image, night image
+</p>
 
 ### Unsupervised training
 
@@ -44,14 +46,18 @@ correspond to structural elements of buildings, as well as trees and small-scale
 <p align="center">
  <img src="images/weights_contribution.png" width="80%">
 </p>
+<p align="center">
 Importance of each of the 256 latent channel with regard to the triplet loss - most channels are not relevant.
+</p>
 
 <br/><br/>
 
 <p align="center">
  <img src="images/channels.png" width="80%">
 </p>
+<p align="center">
 Backpropagated activations of latent channel 206 to pixel space.
+</p>
 
 ### Deep Feature Matching
 
@@ -60,7 +66,9 @@ In addition to only comparing the latent representations of images for image ret
 <p align="center">
  <img src="images/deep_matching.png" width="80%">
 </p>
+<p align="center">
 Triplet loss trends for different feature matching depths.
+</p>
 
 ## Code Organization
 This repository is divided into the following submodules:
