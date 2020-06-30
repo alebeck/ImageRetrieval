@@ -9,7 +9,7 @@ a latent representation suited for direct comparison of images.
 For training our embedding function, we employ a double-VAE structure based on the work of [3] and [2] that assumes a shared latent space as well as cycle consistency. Both autoencoders of our model have the same structure, 
 and each is responsible for encoding and decoding from or to a specific domain. Our encoders and decoders share their last and first set of layers, respectively.
 
-![Architecture](images/architecture.png | width=400)
+![Architecture](images/architecture.png)
 
 The encoders consist of eleven convolutional layers each, the last four of which are shared. We use no pooling layers, 
 since too much information is lost in the process. Instead, we use a stride of two on selected layers. After the first three layers,
